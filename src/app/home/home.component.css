@@ -1,0 +1,200 @@
+
+
+/* 1. CONFIGURACIÓN DEL LIENZO */
+:host {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  overflow: hidden; 
+  background-color: #0d0d12;
+}
+
+/* 2. MOTOR DE FONDO (Limpio y sin cuadros) */
+.fondo-animado {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+.collage-contenedor {
+  display: flex;
+  width: max-content;
+  height: 100%;
+  animation: moverFondo 120s linear infinite; 
+}
+
+.bloque-relativo {
+  position: relative;
+  height: 100%;
+  display: inline-block;
+}
+
+.bloque-relativo img {
+  height: 100vh;
+  width: auto;
+  object-fit: cover;
+  display: block;
+}
+
+@keyframes moverFondo {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); } 
+}
+
+/* 3. CRISTAL OSCURO GENERAL */
+.filtro-oscuro {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 15, 25, 0.4); 
+  backdrop-filter: blur(1.5px); 
+  z-index: 1;
+}
+
+/* NUEVO: Gradiente oscuro para el pie de página */
+.gradiente-inferior {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 30vh; /* Ocupa el 30% inferior de la pantalla */
+  background: linear-gradient(to top, rgba(5, 5, 10, 0.95), transparent);
+  z-index: 2;
+}
+
+/* 4. INTERFAZ DE USUARIO */
+.ui-contenedor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+}
+
+/* Agrupador del Logo y Slogan (Ajustado al 43% de altura) */
+.header-titulos {
+  position: absolute;
+  top: 43%; 
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.logo {
+  font-size: 16rem; 
+  margin: 0;
+  text-shadow: 0 10px 50px rgba(0,0,0,0.9); 
+  line-height: 0.9;
+}
+
+.lom {
+  font-family: 'Avenir Next Arabic', 'Outfit', sans-serif;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.usic {
+  font-family: 'Avenir Next Arabic', 'Outfit', sans-serif;
+  font-weight: 200;
+  color: rgba(255, 255, 255, 0.6);
+  letter-spacing: 5px;
+}
+
+/* Estilo del Slogan */
+.slogan {
+  margin-top: 10px;
+  font-family: 'Avenir Next Arabic', 'Outfit', sans-serif;
+  font-weight: 300;
+  font-size: 1.4rem;
+  color: rgba(255, 255, 255, 0.7);
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  text-shadow: 0 4px 15px rgba(0,0,0,0.8);
+}
+
+/* 5. BOTÓN DANCING GLASS */
+.boton-empezar {
+  position: absolute;
+  bottom: 15vh; 
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 16px 64px !important; 
+  font-size: 1.8rem !important; 
+  border-radius: 50px !important;
+  color: white !important;
+  font-family: 'Avenir Next Arabic', 'Outfit', sans-serif !important;
+  font-weight: 600 !important;
+  letter-spacing: 2px;
+  
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  overflow: hidden; 
+  transition: border 0.4s ease, box-shadow 0.4s ease;
+}
+
+.boton-empezar::before {
+  content: '';
+  position: absolute;
+  top: -100%; left: -100%; width: 300%; height: 300%;
+  z-index: -1; 
+  background: conic-gradient(from 0deg, rgba(138, 43, 226, 0.8), rgba(0, 191, 255, 0.8), rgba(255, 20, 147, 0.8), rgba(138, 43, 226, 0.8));
+  filter: blur(20px);
+  animation: girarLiquido 12s linear infinite;
+}
+
+.boton-empezar:hover::before {
+  animation: girarLiquido 3s linear infinite;
+}
+
+.boton-empezar:hover {
+  border: 1px solid rgba(255, 255, 255, 0.8) !important;
+  box-shadow: 0 12px 50px rgba(255, 20, 147, 0.4);
+  cursor: pointer;
+}
+
+@keyframes girarLiquido {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 6. ENLACES INFERIORES */
+.footer-enlaces {
+  position: absolute;
+  bottom: 4vh;
+  left: 4vw;
+  right: 4vw;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.enlace-texto {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  font-family: 'Avenir Next Arabic', 'Outfit', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 300;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: color 0.3s ease, text-shadow 0.3s ease;
+}
+
+.enlace-texto:hover {
+  color: rgba(255, 255, 255, 1);
+  text-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+}

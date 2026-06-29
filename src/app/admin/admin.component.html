@@ -1,0 +1,146 @@
+<div class="dashboard-layout" [class.sidebar-collapsed]="isCollapsed">
+  
+  <aside class="sidebar">
+    <button class="toggle-arrow" (click)="toggleSidebar()">
+      <mat-icon>{{ isCollapsed ? 'chevron_right' : 'chevron_left' }}</mat-icon>
+    </button>
+
+    <div class="logo-container">
+      <div class="logo-l-wave" [class.playing]="isAnimating">
+        <div class="wave-bar"></div>
+        <div class="wave-bar"></div>
+        <div class="wave-bar"></div>
+      </div>
+      <h1 class="logo-text"><span class="om">OM</span><span class="usic">usic</span></h1>
+    </div>
+
+    <nav class="nav-menu">
+      <a href="#" class="nav-item active">
+        <mat-icon>queue_music</mat-icon>
+        <span class="nav-text">Todas las canciones</span>
+      </a>
+      <a href="#" class="nav-item">
+        <mat-icon>folder</mat-icon>
+        <span class="nav-text">Carpetas</span>
+      </a>
+      <a href="#" class="nav-item">
+        <mat-icon>mic</mat-icon>
+        <span class="nav-text">Artistas</span>
+      </a>
+      <a href="#" class="nav-item">
+        <mat-icon>album</mat-icon>
+        <span class="nav-text">Álbumes</span>
+      </a>
+      <a href="#" class="nav-item">
+        <mat-icon>category</mat-icon>
+        <span class="nav-text">Géneros</span>
+      </a>
+
+      <div class="nav-accordion" [class.open]="isAdvancedOpen && !isCollapsed">
+        <button class="nav-item accordion-toggle" (click)="toggleAdvanced()">
+          <mat-icon>tune</mat-icon>
+          <span class="nav-text">Avanzado</span>
+          <mat-icon class="chevron">expand_more</mat-icon>
+        </button>
+        <div class="accordion-content">
+          <a href="#" class="nav-item sub-item"><mat-icon>error_outline</mat-icon><span class="nav-text">Incompletos</span></a>
+          <a href="#" class="nav-item sub-item"><mat-icon>file_copy</mat-icon><span class="nav-text">Duplicados</span></a>
+        </div>
+      </div>
+
+      <div class="nav-divider"></div>
+      <a href="#" class="nav-item action-scan"><mat-icon>radar</mat-icon><span class="nav-text">Escanear</span></a>
+    </nav>
+    
+    <div class="bottom-menu">
+      <a href="#" class="nav-item"><mat-icon>settings</mat-icon><span class="nav-text">Configuración</span></a>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    
+    <header class="top-header">
+      <div class="search-box">
+        <input type="text" placeholder="Escribe la canción, artista o álbum que buscas...">
+        <div class="search-divider"></div>
+        <button class="search-btn-icon" title="Buscar">
+          <mat-icon style="transform: scale(1);">search</mat-icon>
+        </button>
+      </div>
+
+      <div class="filters-container">
+        
+        <span class="filter-label">Ordenar por:</span>
+        
+        <div class="chip-split" [class.active]="activeSort === 'name'">
+          <div class="chip-text" (click)="toggleSort('name')">Nombre</div>
+          <div class="chip-arrow" *ngIf="activeSort === 'name'" (click)="changeDirection($event)">
+            <mat-icon class="sort-icon">{{ sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
+          </div>
+        </div>
+
+        <div class="chip-split" [class.active]="activeSort === 'date'">
+          <div class="chip-text" (click)="toggleSort('date')">Fecha</div>
+          <div class="chip-arrow" *ngIf="activeSort === 'date'" (click)="changeDirection($event)">
+            <mat-icon class="sort-icon">{{ sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
+          </div>
+        </div>
+
+        <div class="chip-split" [class.active]="activeSort === 'artist'">
+          <div class="chip-text" (click)="toggleSort('artist')">Artista</div>
+          <div class="chip-arrow" *ngIf="activeSort === 'artist'" (click)="changeDirection($event)">
+            <mat-icon class="sort-icon">{{ sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
+          </div>
+        </div>
+
+        <div class="chip-split" [class.active]="activeSort === 'album'">
+          <div class="chip-text" (click)="toggleSort('album')">Álbum</div>
+          <div class="chip-arrow" *ngIf="activeSort === 'album'" (click)="changeDirection($event)">
+            <mat-icon class="sort-icon">{{ sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
+          </div>
+        </div>
+
+        <div class="chip-split" [class.active]="activeSort === 'genre'">
+          <div class="chip-text" (click)="toggleSort('genre')">Género</div>
+          <div class="chip-arrow" *ngIf="activeSort === 'genre'" (click)="changeDirection($event)">
+            <mat-icon class="sort-icon">{{ sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
+          </div>
+        </div>
+
+        <div class="chip-split" [class.active]="activeSort === 'duration'">
+          <div class="chip-text" (click)="toggleSort('duration')">Duración</div>
+          <div class="chip-arrow" *ngIf="activeSort === 'duration'" (click)="changeDirection($event)">
+            <mat-icon class="sort-icon">{{ sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
+          </div>
+        </div>
+
+        <div class="filter-divider"></div>
+        <span class="filter-label">Filtros:</span>
+
+        <div class="format-expander" [class.expanded]="isFormatExpanded">
+          
+          <button class="chip-btn trigger-btn" [class.format-active]="activeFormat !== null" (click)="isFormatExpanded = !isFormatExpanded">
+            Formato <mat-icon class="sort-icon">{{ isFormatExpanded ? 'chevron_left' : 'chevron_right' }}</mat-icon>
+          </button>
+          
+          <div class="format-options">
+            <button class="chip-btn option-btn" [class.active]="activeFormat === 'MP3'" (click)="selectFormat('MP3')">MP3</button>
+            <button class="chip-btn option-btn" [class.active]="activeFormat === 'FLAC'" (click)="selectFormat('FLAC')">FLAC</button>
+            <button class="chip-btn option-btn" [class.active]="activeFormat === 'WAV'" (click)="selectFormat('WAV')">WAV</button>
+            <button class="chip-btn option-btn" [class.active]="activeFormat === 'Hi-Res'" (click)="selectFormat('Hi-Res')">Hi-Res</button>
+          </div>
+
+        </div>
+
+      </div>
+    </header>
+
+    <section class="table-glass-container">
+      <div class="empty-state">
+        <mat-icon style="font-size: 48px; height: 48px; width: 48px; opacity: 0.2;">library_music</mat-icon>
+        <p>Espacio reservado para el Data Grid</p>
+      </div>
+    </section>
+    
+  </main>
+</div>
