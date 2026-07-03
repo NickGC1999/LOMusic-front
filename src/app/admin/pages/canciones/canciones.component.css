@@ -1,0 +1,284 @@
+/* Sobrescribimos el centrado global para que la tabla ocupe todo el espacio y empiece desde arriba */
+.list-override {
+  padding: 0; 
+  justify-content: flex-start;
+  align-items: stretch;
+  overflow: hidden; /* Evita que la tabla rompa las esquinas redondeadas del cristal */
+}
+
+.song-table {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto; /* Scroll interno solo para la lista */
+}
+
+/* --- ARQUITECTURA DEL GRID --- */
+.song-header, .song-row {
+  display: grid;
+  /* CRÍTICO: Reemplazamos el 50px de la portada por la variable */
+  grid-template-columns: 40px var(--grid-cover-size) 2.5fr 1.5fr 1.5fr 80px 80px;
+  align-items: center;
+  gap: var(--grid-gap);           /* <--- Variable */
+  padding: var(--grid-padding);   /* <--- Variable */
+  transition: all 0.3s ease;      /* Animación suave al cambiar la densidad */
+}
+
+/* --- ENCABEZADO STICKY --- */
+.song-header {
+  position: sticky;
+  top: 0;
+  background: var(--bg-card); /* Usa el color del cristal actual */
+  backdrop-filter: blur(20px);
+  z-index: 10;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--glass-border);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.song-row {
+  border-bottom: 1px solid var(--glass-border); 
+  color: var(--text-main);
+  transition: background 0.2s ease, padding 0.3s ease;
+  font-size: var(--grid-font-size); /* <--- Variable */
+  cursor: pointer;
+}
+
+/* Efecto hover elegante al pasar el ratón */
+.song-row:hover {
+  background: var(--glass-hover);
+}
+
+/* --- ESTILOS DE COLUMNAS ESPECÍFICAS --- */
+.col-index {
+  color: var(--text-muted);
+  font-weight: 600;
+  text-align: center;
+}
+
+.col-cover img {
+  width: var(--grid-cover-size);    /* <--- Variable */
+  height: var(--grid-cover-size);   /* <--- Variable */
+  border-radius: 6px;
+  object-fit: cover;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  display: block;
+  transition: all 0.3s ease;
+}
+
+.col-title {
+  font-weight: 600;
+  /* Truncamiento inteligente: si el nombre es muy largo, pone "..." */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.col-artist, .col-album {
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.col-time {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums; /* Asegura que los números queden alineados verticalmente */
+}
+
+.col-format {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: 0.5px;
+}
+
+/* Mensaje de carga */
+.loading-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  color: var(--text-muted);
+  font-weight: 600;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+/* ==========================================
+   MODAL DE EDICIÓN DE CANCIÓN
+========================================== */
+.edit-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(4px);
+  display: flex; justify-content: center; align-items: center;
+  z-index: 2000;
+  animation: fadeIn 0.3s ease;
+}
+
+.edit-modal {
+  width: 750px;
+  border-radius: 24px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
+  border: 1px solid var(--glass-border);
+}
+
+/* --- EL TRUCO DEL COLOR DINÁMICO (ARREGLO TEMA CLARO) --- */
+/* --- EL TRUCO DEL COLOR DINÁMICO --- */
+.dynamic-bg {
+  position: absolute; 
+  top: -30px; left: -30px; right: -30px; bottom: -30px; /* Expandido para evitar bordes duros */
+  background-size: cover; 
+  background-position: center;
+  /* El desenfoque base */
+  filter: blur(45px);
+  opacity: 0.35; 
+  z-index: 0; 
+  pointer-events: none;
+  transition: all 0.4s ease;
+}
+
+/* EXCEPCIÓN TEMA CLARO: Dando vida al color */
+:host-context(.light-theme) .dynamic-bg {
+  opacity: 0.55; /* Aumentamos la fuerza del color */
+  filter: blur(45px) saturate(2); /* Saturamos los colores al 200% para que resalten bajo el blanco */
+}
+
+/* --- ANIMACIONES DE ENTRADA Y SALIDA --- */
+.edit-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(4px);
+  display: flex; justify-content: center; align-items: center; z-index: 2000;
+  animation: overlayFadeIn 0.25s ease forwards;
+}
+
+.edit-modal {
+  width: 750px; border-radius: 24px; position: relative; overflow: hidden;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6); border: 1px solid var(--glass-border);
+  animation: modalPopIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Cuando la variable isClosingModal es true, se aplican las animaciones en reversa */
+.edit-overlay.closing { animation: overlayFadeOut 0.25s ease forwards; }
+.edit-overlay.closing .edit-modal { animation: modalPopOut 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+/* KEYFRAMES FLUIDOS */
+@keyframes overlayFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes overlayFadeOut { from { opacity: 1; } to { opacity: 0; } }
+@keyframes modalPopIn { from { opacity: 0; transform: scale(0.92) translateY(15px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+@keyframes modalPopOut { from { opacity: 1; transform: scale(1) translateY(0); } to { opacity: 0; transform: scale(0.92) translateY(15px); } }
+
+
+/* --- LA CAPA DE CRISTAL --- */
+.modal-content-glass {
+  position: relative;
+  z-index: 1;
+  background: var(--bg-card); /* Por defecto usa el 0.6 oscuro */
+  padding: 30px 40px;
+  display: flex; flex-direction: column; gap: 20px;
+  border-radius: 24px;
+}
+
+/* EXCEPCIÓN TEMA CLARO: El verdadero Glassmorphism */
+:host-context(.light-theme) .modal-content-glass {
+  /* CRÍTICO: Bajamos la opacidad del blanco de 0.95 a 0.65 para que deje pasar la luz de la carátula */
+  background: rgba(255, 255, 255, 0.65);
+  /* Aplicamos un difuminado al propio cristal para que mezcle los colores suavemente */
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  /* Un borde blanco puro muy sutil para dar la ilusión de un vidrio pulido */
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+.edit-header {
+  display: flex; justify-content: space-between; align-items: center;
+  color: var(--text-main);
+}
+.edit-header h2 { margin: 0; font-size: 1.4rem; font-weight: 800; }
+.close-icon { background: transparent; border: none; color: var(--text-muted); cursor: pointer; transition: 0.3s;}
+.close-icon:hover { color: var(--text-main); }
+
+.edit-body {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 30px;
+}
+
+.cover-section { display: flex; flex-direction: column; gap: 15px; }
+.cover-section img { width: 100%; border-radius: 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.4); }
+
+.form-section { display: flex; flex-direction: column; gap: 15px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+.form-group label { display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-main); margin-bottom: 6px; margin-left: 10px;}
+
+/* Estilo exacto del mockup: Píldoras de cristal */
+.lov-input {
+  width: 100%;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--text-main);
+  padding: 12px 20px;
+  border-radius: 50px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.95rem;
+  outline: none;
+  transition: all 0.3s;
+}
+.lov-input:focus { border-color: var(--accent-color); background: var(--glass-hover); }
+
+.lyrics-area {
+  border-radius: 20px;
+  min-height: 100px;
+  resize: vertical;
+}
+
+/* BOTONES */
+.btn-rescan {
+  background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: var(--text-main);
+  padding: 10px; border-radius: 50px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: 0.3s; font-family: 'Outfit';
+}
+.btn-rescan:hover { background: var(--glass-hover); }
+
+.edit-footer { display: flex; justify-content: flex-end; gap: 15px; margin-top: 10px; }
+.btn-reset { background: transparent; border: 1px solid var(--glass-border); color: var(--text-main); padding: 10px 25px; border-radius: 50px; cursor: pointer; transition: 0.3s; font-family: 'Outfit';}
+.btn-reset:hover { background: rgba(255,100,100,0.1); border-color: #ff4444; color: #ff4444; }
+.btn-save { background: var(--accent-color); border: none; color: white; padding: 10px 30px; font-weight: 700; border-radius: 50px; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 15px rgba(138, 43, 226, 0.4); font-family: 'Outfit';}
+.btn-save:hover { transform: translateY(-2px); filter: brightness(1.1); }
+
+/* --- MOTOR DE ANIMACIÓN DE ENTRADA --- */
+/* --- MOTOR DE ANIMACIÓN ULTRA DELICADA --- */
+@keyframes delicateEntry {
+  from {
+    opacity: 0;
+    transform: translateY(6px); /* Recorrido mínimo, máxima sutileza */
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Aplicar a las filas o tarjetas */
+.song-row, .win-folder, .grid-card {
+  animation: delicateEntry 0.4s cubic-bezier(0.25, 1, 0.5, 1) both;
+}
+
+/* Escalonamiento de cascada (Stagger) sutil */
+.song-row:nth-child(1), .win-folder:nth-child(1), .grid-card:nth-child(1) { animation-delay: 0.015s; }
+.song-row:nth-child(2), .win-folder:nth-child(2), .grid-card:nth-child(2) { animation-delay: 0.030s; }
+.song-row:nth-child(3), .win-folder:nth-child(3), .grid-card:nth-child(3) { animation-delay: 0.045s; }
+.song-row:nth-child(4), .win-folder:nth-child(4), .grid-card:nth-child(4) { animation-delay: 0.060s; }
+.song-row:nth-child(5), .win-folder:nth-child(5), .grid-card:nth-child(5) { animation-delay: 0.075s; }

@@ -1,1 +1,92 @@
-<p>albumes works!</p>
+<header class="top-header">
+  <div class="search-box">
+    <input type="text" placeholder="Buscar álbumes en tu biblioteca local...">
+    <div class="search-divider"></div>
+    <button class="search-btn-icon"><mat-icon>search</mat-icon></button>
+  </div>
+</header>
+
+<div class="table-glass-container list-override">
+  
+  <div class="back-action-bar" *ngIf="viewMode === 'albumDetail'">
+    <button class="btn-back" (click)="backToGrid()">
+      <mat-icon>arrow_back</mat-icon><span>Volver a Álbumes</span>
+    </button>
+
+    <div class="missing-toggle-wrapper">
+      <span class="toggle-label">Mostrar canciones faltantes para completar álbum</span>
+      <label class="lov-switch">
+        <input type="checkbox" [(ngModel)]="showMissingTracks">
+        <span class="slider round"></span>
+      </label>
+    </div>
+  </div>
+
+  <div class="explorer-content">
+    
+    <div class="albums-grid" *ngIf="viewMode === 'grid'">
+      <div class="album-square-card generic-entry" *ngFor="let album of albumesToDisplay" (click)="openAlbum(album)">
+        <div class="square-cover-wrapper">
+          <img [src]="album.coverUrl" [alt]="album.title">
+        </div>
+        <div class="album-card-info">
+          <h3 class="album-card-title">{{ album.title }}</h3>
+          <span class="album-card-artist">{{ album.artist }}</span>
+          <span class="album-card-tracks">{{ album.localTrackCount }} pistas almacenadas</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="album-detail-container view-fade-in" *ngIf="viewMode === 'albumDetail' && selectedAlbum">
+      
+      <div class="album-banner">
+        <div class="banner-cover-box">
+          <img [src]="selectedAlbum.info.coverUrl" [alt]="selectedAlbum.info.title">
+        </div>
+        <div class="banner-meta">
+          <span class="banner-tag">Álbum • {{ selectedAlbum.info.year }}</span>
+          <h1 class="banner-title">{{ selectedAlbum.info.title }}</h1>
+          <span class="banner-artist">{{ selectedAlbum.info.artist }}</span>
+        </div>
+      </div>
+
+      <div class="song-table">
+        <div class="song-header">
+          <div class="col-index">#</div>
+          <div class="col-cover">COVER</div>
+          <div class="col-title">TITLE</div>
+          <div class="col-artist">ARTIST</div>
+          <div class="col-album">ALBUM</div>
+          <div class="col-time">TIME</div>
+          <div class="col-format">FORMAT</div>
+        </div>
+
+        <div class="song-row" *ngFor="let track of selectedAlbum.tracks" 
+             [class.spotify-disabled]="!track.isLocal"
+             [class.hide-missing]="!track.isLocal && !showMissingTracks"
+             (click)="track.isLocal ? openSongEdit(track.localSongData) : null">
+            
+          <div class="col-index">{{ track.trackNumber }}</div>
+          <div class="col-cover">
+            <img [src]="track.coverUrl" [alt]="track.album">
+          </div>
+          <div class="col-title">{{ track.title }}</div>
+          <div class="col-artist">{{ track.artist }}</div>
+          <div class="col-album">{{ track.album }}</div>
+          <div class="col-time">{{ track.duration }}</div>
+          <div class="col-format">{{ track.format }}</div>
+
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<app-edit-modal 
+  [song]="songToEdit" 
+  [isClosing]="isClosingEditModal" 
+  (close)="closeEditModal()" 
+  (save)="saveChanges($event)">
+</app-edit-modal>

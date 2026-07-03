@@ -1,0 +1,163 @@
+/* --- CABECERA Y BUSCADOR (Igual a canciones.component) --- */
+.top-header { display: flex; flex-direction: column; gap: 20px; width: 100%; margin-bottom: 5px;}
+.search-box { display: flex; align-items: center; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 50px; padding: 5px 8px 5px 25px; transition: all 0.3s; }
+.search-box:focus-within { border-color: var(--accent-color); background: var(--glass-hover); box-shadow: 0 0 15px rgba(138, 43, 226, 0.1); }
+.search-box input { flex-grow: 1; background: transparent; border: none; color: var(--text-main); font-family: 'Outfit'; font-size: 1rem; outline: none; }
+.search-divider { width: 1px; height: 24px; background: var(--glass-border); margin: 0 10px; }
+.search-btn-icon { background: var(--glass-bg); border: none; color: var(--text-main); border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s; }
+.search-btn-icon:hover { background: var(--accent-color); color: white; }
+
+.filters-container { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.filter-label { font-weight: 800; margin-right: 5px; color: var(--text-muted); }
+.chip-split { display: flex; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 50px; color: var(--text-main); font-family: 'Outfit'; transition: 0.2s; cursor: pointer; }
+.chip-split.active { background: rgba(138, 43, 226, 0.15); border-color: var(--accent-color); color: var(--accent-color); }
+.chip-text { padding: 8px 18px; }
+.chip-split:hover { background: var(--glass-hover); }
+
+/* --- CONTENEDOR PRINCIPAL Y RUTA DE WINDOWS --- */
+.list-override { padding: 0; justify-content: flex-start; align-items: stretch; overflow: hidden; display: flex; flex-direction: column; }
+
+.explorer-path-bar {
+  display: flex; align-items: center; gap: 5px;
+  padding: 12px 25px;
+  background: rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid var(--glass-border); /* Línea delgada requerida */
+}
+:host-context(.light-theme) .explorer-path-bar { background: rgba(255, 255, 255, 0.5); }
+
+.home-icon { color: var(--text-main); font-size: 20px; width: 20px; height: 20px; }
+.crumb { color: var(--text-muted); cursor: pointer; font-weight: 600; padding: 4px 8px; border-radius: 6px; transition: 0.2s; font-size: 0.9rem; }
+.crumb:hover { background: var(--glass-hover); color: var(--text-main); }
+.crumb.active { color: var(--text-main); font-weight: 800; cursor: default; background: transparent; }
+.crumb-separator { color: var(--glass-border); font-size: 18px; width: 18px; height: 18px; }
+
+.explorer-content { flex-grow: 1; overflow-y: auto; }
+
+/* =========================================
+   VISTA DE CARPETAS (ESTILO WINDOWS)
+========================================= */
+.folders-grid {
+  display: grid;
+  /* Iconos responsivos basados en la densidad global */
+  grid-template-columns: repeat(auto-fill, minmax(calc(var(--grid-cover-size) * 1.5 + 40px), 1fr));
+  gap: 15px;
+  padding: 25px;
+}
+
+.win-folder {
+  display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px;
+  padding: 15px 10px; border-radius: 8px; cursor: pointer; border: 1px solid transparent;
+  transition: 0.2s;
+}
+.win-folder:hover { background: var(--glass-hover); border-color: var(--glass-border); }
+
+/* Icono de Carpeta Nativo */
+.win-icon-wrapper {
+  color: var(--accent-color); /* Morado LOMusic, o pon #f1c40f para amarillo clásico */
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+  transition: 0.2s;
+}
+.win-icon-wrapper mat-icon { font-size: calc(var(--grid-cover-size) * 1.5); width: calc(var(--grid-cover-size) * 1.5); height: calc(var(--grid-cover-size) * 1.5); }
+.win-folder:hover .win-icon-wrapper { transform: scale(1.05); }
+
+/* Carátula (Álbum) */
+.win-cover-wrapper {
+  width: calc(var(--grid-cover-size) * 1.5);
+  height: calc(var(--grid-cover-size) * 1.5);
+  border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  transition: 0.2s;
+}
+.win-cover-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+.win-folder:hover .win-cover-wrapper { transform: scale(1.05); }
+
+.win-folder-info { display: flex; flex-direction: column; align-items: center; width: 100%; }
+.win-name { font-size: 0.9rem; font-weight: 600; color: var(--text-main); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; word-break: break-word;}
+.win-count { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;}
+
+/* =========================================
+   ANIMACIÓN DE CARGA (ONDA LOMUSIC)
+========================================= */
+.loading-overlay { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-main); animation: fadeIn 0.3s; }
+.giant-l-wave { display: flex; align-items: flex-end; gap: 8px; height: 80px; margin-bottom: 25px; }
+.wave-bar { width: 12px; background: var(--accent-color); border-radius: 10px; transition: height 0.4s; }
+.wave-bar:nth-child(1) { animation: freq1 0.8s ease-in-out infinite; }
+.wave-bar:nth-child(2) { animation: freq2 0.9s ease-in-out infinite; }
+.wave-bar:nth-child(3) { animation: freq3 0.7s ease-in-out infinite; }
+
+.loading-overlay h3 { margin: 0 0 5px 0; font-weight: 800; font-size: 1.5rem; }
+.loading-overlay p { margin: 0; color: var(--text-muted); }
+
+/* =========================================
+   MODAL WARNING Y TABLA CANCIONES
+========================================= */
+.warning-modal { text-align: center; width: 450px; }
+.warning-icon-bg { width: 70px; height: 70px; background: rgba(225, 29, 72, 0.1); border-radius: 50%; display: flex; justify-content: center; align-items: center; color: #e11d48; margin: 0 auto 20px; }
+.warning-icon-bg mat-icon { font-size: 35px; width: 35px; height: 35px; }
+.warning-modal h2 { margin: 0 0 10px; }
+.warning-modal p { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 25px; line-height: 1.5; }
+
+/* Tabla de canciones extraída del componente anterior */
+.song-table { display: flex; flex-direction: column; width: 100%; overflow-y: auto; }
+.song-header, .song-row { display: grid; grid-template-columns: 40px var(--grid-cover-size) 2.5fr 1.5fr 1.5fr 80px 80px; align-items: center; gap: var(--grid-gap); padding: var(--grid-padding); }
+.song-header { position: sticky; top: 0; background: var(--bg-card); backdrop-filter: blur(20px); z-index: 10; font-size: 0.8rem; font-weight: 800; color: var(--text-muted); border-bottom: 1px solid var(--glass-border); text-transform: uppercase; }
+.song-row { border-bottom: 1px solid var(--glass-border); color: var(--text-main); font-size: var(--grid-font-size); cursor: pointer; transition: 0.2s; }
+.song-row:hover { background: var(--glass-hover); }
+.col-index { color: var(--text-muted); font-weight: 600; text-align: center; }
+.col-cover img { width: var(--grid-cover-size); height: var(--grid-cover-size); border-radius: 6px; object-fit: cover; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+.col-title { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.col-artist, .col-album { color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Keyframes de modales (Reutilizados de admin) */
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(8px); display: flex; justify-content: center; align-items: center; z-index: 1000; animation: overlayFadeIn 0.25s forwards; }
+.glass-modal { background: var(--bg-card); border: 1px solid var(--glass-border); border-radius: 20px; padding: 30px; color: var(--text-main); animation: modalPopIn 0.25s forwards; }
+.modal-overlay.closing { animation: overlayFadeOut 0.25s forwards; }
+.modal-overlay.closing .glass-modal { animation: modalPopOut 0.25s forwards; }
+.modal-actions { display: flex; justify-content: center; gap: 15px; }
+.btn-cancel { background: transparent; color: var(--text-main); border: 1px solid var(--glass-border); padding: 10px 25px; border-radius: 50px; cursor: pointer; transition: 0.3s; font-family: 'Outfit';}
+.btn-cancel:hover { background: var(--glass-hover); }
+.btn-danger { background: #e11d48; color: white; border: none; padding: 10px 25px; border-radius: 50px; cursor: pointer; font-weight: 600; transition: 0.3s; font-family: 'Outfit';}
+.btn-danger:hover { background: #be123c; transform: translateY(-2px); }
+
+@keyframes freq1 { 0%, 100% { height: 20%; } 30% { height: 90%; } 60% { height: 40%; } 80% { height: 100%; } }
+@keyframes freq2 { 0%, 100% { height: 90%; } 25% { height: 20%; } 50% { height: 100%; } 75% { height: 40%; } }
+@keyframes freq3 { 0%, 100% { height: 40%; } 30% { height: 100%; } 70% { height: 20%; } }
+@keyframes overlayFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes overlayFadeOut { from { opacity: 1; } to { opacity: 0; } }
+@keyframes modalPopIn { from { opacity: 0; transform: scale(0.92) translateY(15px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+@keyframes modalPopOut { from { opacity: 1; transform: scale(1) translateY(0); } to { opacity: 0; transform: scale(0.92) translateY(15px); } }
+
+/* --- MOTOR DE ANIMACIÓN PARA APARTADO CARPETAS --- */
+@keyframes folderEntry {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* --- MOTOR DE ANIMACIÓN ULTRA DELICADA --- */
+@keyframes delicateEntry {
+  from {
+    opacity: 0;
+    transform: translateY(6px); /* Recorrido mínimo, máxima sutileza */
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Aplicar a las filas o tarjetas */
+.song-row, .win-folder, .grid-card {
+  animation: delicateEntry 0.4s cubic-bezier(0.25, 1, 0.5, 1) both;
+}
+
+/* Escalonamiento de cascada (Stagger) sutil */
+.song-row:nth-child(1), .win-folder:nth-child(1), .grid-card:nth-child(1) { animation-delay: 0.015s; }
+.song-row:nth-child(2), .win-folder:nth-child(2), .grid-card:nth-child(2) { animation-delay: 0.030s; }
+.song-row:nth-child(3), .win-folder:nth-child(3), .grid-card:nth-child(3) { animation-delay: 0.045s; }
+.song-row:nth-child(4), .win-folder:nth-child(4), .grid-card:nth-child(4) { animation-delay: 0.060s; }
+.song-row:nth-child(5), .win-folder:nth-child(5), .grid-card:nth-child(5) { animation-delay: 0.075s; }

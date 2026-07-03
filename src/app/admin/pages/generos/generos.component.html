@@ -1,0 +1,80 @@
+<header class="top-header">
+  <div class="search-box">
+    <input type="text" placeholder="Buscar género musical...">
+    <div class="search-divider"></div>
+    <button class="search-btn-icon"><mat-icon>search</mat-icon></button>
+  </div>
+
+  <div class="filters-container" *ngIf="viewMode === 'genres'">
+    <span class="filter-label">Ordenar por:</span>
+    
+    <div class="chip-split" [class.active]="activeSort === 'name'">
+      <div class="chip-text" (click)="toggleSort('name')">Alfabeto</div>
+      <div class="chip-arrow" *ngIf="activeSort === 'name'" (click)="toggleSort('name')">
+        <mat-icon class="sort-icon">{{ sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
+      </div>
+    </div>
+
+    <div class="chip-split" [class.active]="activeSort === 'count'">
+      <div class="chip-text" (click)="toggleSort('count')">Cantidad</div>
+      <div class="chip-arrow" *ngIf="activeSort === 'count'" (click)="toggleSort('count')">
+        <mat-icon class="sort-icon">{{ sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="table-glass-container list-override">
+  
+  <div class="back-action-bar" *ngIf="viewMode === 'songs'">
+    <button class="btn-back" (click)="backToGenres()">
+      <mat-icon>arrow_back</mat-icon>
+      <span>Volver</span>
+    </button>
+    <div class="search-divider"></div>
+    <span class="current-genre-label">{{ selectedGenre }}</span>
+  </div>
+
+  <div class="explorer-content">
+    
+    <div class="genres-grid" *ngIf="viewMode === 'genres'">
+      <div class="genre-bubble" *ngFor="let genre of genresToDisplay" (click)="openGenre(genre)">
+        <div class="bubble-icon">
+          <mat-icon>{{ genre.icon }}</mat-icon>
+        </div>
+        <h3 class="bubble-name">{{ genre.name }}</h3>
+        <span class="bubble-count">{{ genre.count }} pistas</span>
+      </div>
+    </div>
+
+    <div class="song-table" *ngIf="viewMode === 'songs'">
+      <div class="song-header">
+        <div class="col-index">#</div>
+        <div class="col-cover">COVER</div>
+        <div class="col-title">TITLE</div>
+        <div class="col-artist">ARTIST</div>
+        <div class="col-album">ALBUM</div>
+        <div class="col-time">TIME</div>
+        <div class="col-format">FORMAT</div>
+      </div>
+
+      <div class="song-row" *ngFor="let song of songsToDisplay; let i = index" (click)="openEditModal(song)">
+        <div class="col-index">{{ i + 1 }}</div>
+        <div class="col-cover"><img [src]="song.coverUrl" alt="cover"></div>
+        <div class="col-title">{{ song.title }}</div>
+        <div class="col-artist">{{ song.artist }}</div>
+        <div class="col-album">{{ song.album }}</div>
+        <div class="col-time">{{ song.duration }}</div>
+        <div class="col-format">{{ song.format }}</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<app-edit-modal 
+  [song]="songToEdit" 
+  [isClosing]="isClosingEditModal" 
+  (close)="closeEditModal()" 
+  (save)="saveChanges($event)">
+</app-edit-modal>

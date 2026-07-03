@@ -1,0 +1,65 @@
+<header class="top-header">
+  <div class="search-box">
+    <input type="text" placeholder="Escribe la canción, artista o álbum que buscas...">
+    <div class="search-divider"></div>
+    <button class="search-btn-icon"><mat-icon>search</mat-icon></button>
+  </div>
+
+  <div class="filters-container">
+    <span class="filter-label">Ordenar por:</span>
+    
+    <div class="chip-split" [class.active]="activeSort === 'name'">
+      <div class="chip-text" (click)="toggleSort('name')">Nombre</div>
+      <div class="chip-arrow" *ngIf="activeSort === 'name'" (click)="changeDirection($event)">
+        <mat-icon class="sort-icon">{{ sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
+      </div>
+    </div>
+
+    <div class="chip-split" [class.active]="activeSort === 'date'">
+      <div class="chip-text" (click)="toggleSort('date')">Fecha</div>
+      <div class="chip-arrow" *ngIf="activeSort === 'date'" (click)="changeDirection($event)">
+        <mat-icon class="sort-icon">{{ sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
+      </div>
+    </div>
+
+    <div class="chip-split" [class.active]="activeSort === 'artist'">
+      <div class="chip-text" (click)="toggleSort('artist')">Artista</div>
+      <div class="chip-arrow" *ngIf="activeSort === 'artist'" (click)="changeDirection($event)">
+        <mat-icon class="sort-icon">{{ sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
+      </div>
+    </div>
+
+    <div class="chip-split" [class.active]="activeSort === 'album'">
+      <div class="chip-text" (click)="toggleSort('album')">Álbum</div>
+      <div class="chip-arrow" *ngIf="activeSort === 'album'" (click)="changeDirection($event)">
+        <mat-icon class="sort-icon">{{ sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
+      </div>
+    </div>
+
+    <div class="filter-divider"></div>
+    <span class="filter-label">Filtros:</span>
+
+    <div class="format-expander" [class.expanded]="isFormatExpanded">
+      <button class="chip-btn trigger-btn" [class.format-active]="activeFormat !== null" (click)="isFormatExpanded = !isFormatExpanded">
+        Formato <mat-icon class="sort-icon">{{ isFormatExpanded ? 'chevron_left' : 'chevron_right' }}</mat-icon>
+      </button>
+      
+      <div class="format-options">
+        <button class="chip-btn option-btn" [class.active]="activeFormat === 'MP3'" (click)="selectFormat('MP3')">MP3</button>
+        <button class="chip-btn option-btn" [class.active]="activeFormat === 'FLAC'" (click)="selectFormat('FLAC')">FLAC</button>
+        <button class="chip-btn option-btn" [class.active]="activeFormat === 'WAV'" (click)="selectFormat('WAV')">WAV</button>
+        <button class="chip-btn option-btn" [class.active]="activeFormat === 'Hi-Res'" (click)="selectFormat('Hi-Res')">Hi-Res</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="table-glass-container empty-state-override">
+  <div class="empty-content">
+    <div class="icon-ring">
+      <mat-icon>check_circle_outline</mat-icon>
+    </div>
+    <h2>Todo está en orden</h2>
+    <p>No se han detectado archivos con metadatos incompletos o corruptos en tu biblioteca.</p>
+  </div>
+</div>

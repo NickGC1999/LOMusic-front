@@ -1,1 +1,155 @@
-<p>artistas works!</p>
+<header class="top-header">
+  <div class="search-box">
+    <input type="text" placeholder="Buscar artistas en tu biblioteca local...">
+    <div class="search-divider"></div>
+    <button class="search-btn-icon"><mat-icon>search</mat-icon></button>
+  </div>
+</header>
+
+<div class="table-glass-container list-override">
+  
+  <div class="back-action-bar" *ngIf="viewMode !== 'grid'">
+    <button class="btn-back" *ngIf="viewMode === 'artistDetail'" (click)="backToGrid()">
+      <mat-icon>arrow_back</mat-icon><span>Volver a Artistas</span>
+    </button>
+    <button class="btn-back" *ngIf="viewMode === 'albumDetail'" (click)="backToArtistDetail()">
+      <mat-icon>arrow_back</mat-icon><span>Volver a {{ selectedArtist?.name }}</span>
+    </button>
+
+    <div class="missing-toggle-wrapper" *ngIf="viewMode === 'albumDetail'">
+      <span class="toggle-label">Mostrar canciones faltantes para completar álbum</span>
+      <label class="lov-switch">
+        <input type="checkbox" [(ngModel)]="showMissingTracks">
+        <span class="slider round"></span>
+      </label>
+    </div>
+  </div>
+
+  <div class="explorer-content">
+    
+    <div class="artists-grid animated-view" *ngIf="viewMode === 'grid'">
+      <div class="artist-circle-card generic-entry" *ngFor="let artist of ARTIST_CATALOG" (click)="openArtist(artist)">
+        <div class="circle-img-wrapper">
+          <img [src]="artist.imagePath" [alt]="artist.name">
+        </div>
+        <h3 class="artist-name">{{ artist.name }}</h3>
+        <span class="artist-track-count">{{ artist.localTrackCount }} pistas en disco</span>
+      </div>
+    </div>
+
+    <div class="artist-detail-container view-fade-in" *ngIf="viewMode === 'artistDetail' && selectedArtist">
+      
+      <div class="artist-header-section">
+        <div class="square-curved-img">
+          <img [src]="selectedArtist.imagePath" [alt]="selectedArtist.name">
+        </div>
+        <div class="artist-bio-panel">
+          <h1 class="bio-title">{{ selectedArtist.name }}</h1>
+          <p class="bio-text">{{ selectedArtist.bio }}</p>
+          
+          <div class="bio-highlights">
+            <span class="highlight-title">Pistas icónicas de referencia:</span>
+            <div class="tags-row">
+              <span class="song-tag" *ngFor="let popSong of selectedArtist.popularSongs">
+                <mat-icon>star</mat-icon> {{ popSong }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="discreet-divider"></div>
+
+      <div class="albums-section">
+        <h2 class="section-heading">Álbumes detectados en la colección local</h2>
+        <div class="albums-grid">
+          <div class="album-card generic-entry" *ngFor="let album of artistAvailableAlbums" (click)="openAlbum(album)">
+            <div class="album-cover">
+              <img [src]="album.coverUrl" [alt]="album.title">
+            </div>
+            <div class="album-meta">
+              <h3 class="album-title">{{ album.title }}</h3>
+              <span class="album-year">{{ album.year }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="discreet-divider"></div>
+
+      <div class="local-songs-section">
+        <h2 class="section-heading">Todas las pistas locales almacenadas ({{ artistLocalSongs.length }})</h2>
+        
+        <div class="song-table">
+          <div class="song-header">
+            <div class="col-index">#</div>
+            <div class="col-cover">COVER</div>
+            <div class="col-title">TITLE</div>
+            <div class="col-album">ALBUM</div>
+            <div class="col-time">TIME</div>
+            <div class="col-format">FORMAT</div>
+          </div>
+
+          <div class="song-row" *ngFor="let song of artistLocalSongs; let i = index" (click)="openSongEdit(song)">
+            <div class="col-index">{{ i + 1 }}</div>
+            <div class="col-cover"><img [src]="song.coverUrl" alt="cover"></div>
+            <div class="col-title">{{ song.title }}</div>
+            <div class="col-album">{{ song.album }}</div>
+            <div class="col-time">{{ song.duration }}</div>
+            <div class="col-format">{{ song.format }}</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="album-audit-container view-fade-in" *ngIf="viewMode === 'albumDetail' && selectedAlbum">
+      
+      <div class="album-banner">
+        <img [src]="selectedAlbum.catalog.coverUrl" class="banner-cover">
+        <div class="banner-info">
+          <h2>{{ selectedAlbum.catalog.title }}</h2>
+          <span>Auditoría discográfica • {{ selectedAlbum.catalog.year }}</span>
+        </div>
+      </div>
+
+      <div class="song-table">
+        <div class="song-header">
+          <div class="col-index">#</div>
+          <div class="col-cover">COVER</div>
+          <div class="col-title">TITLE</div>
+          <div class="col-artist">ARTIST</div>
+          <div class="col-album">ALBUM</div>
+          <div class="col-time">TIME</div>
+          <div class="col-format">FORMAT</div>
+        </div>
+
+        <div class="song-row" *ngFor="let track of selectedAlbum.tracks" 
+             [class.spotify-disabled]="!track.isLocal"
+             [class.hide-missing]="!track.isLocal && !showMissingTracks"
+             (click)="track.isLocal ? openSongEdit(track.localSongData) : null">
+            
+          <div class="col-index">{{ track.trackNumber }}</div>
+          <div class="col-cover">
+            <img [src]="track.coverUrl" [alt]="track.album">
+          </div>
+          <div class="col-title">{{ track.title }}</div>
+          <div class="col-artist">{{ track.artist }}</div>
+          <div class="col-album">{{ track.album }}</div>
+          <div class="col-time">{{ track.duration }}</div>
+          <div class="col-format">{{ track.format }}</div>
+
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<app-edit-modal 
+  [song]="songToEdit" 
+  [isClosing]="isClosingEditModal" 
+  (close)="closeEditModal()" 
+  (save)="saveChanges($event)">
+</app-edit-modal>

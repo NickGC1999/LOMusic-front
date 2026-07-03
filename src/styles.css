@@ -1,4 +1,342 @@
-/* You can add global styles to this file, and also import other style files */
+:root {
+  /* TEMA OSCURO (Degradado Abismal: Azul noche a Morado profundo) */
+  --bg-main: linear-gradient(135deg, #07070b 0%, #0f1025 50%, #2a2a72 100%);
+  --bg-sidebar: #0d0d14;
+  --bg-card: rgba(20, 20, 30, 0.6);
+  --text-main: #ffffff;
+  --text-muted: rgba(255, 255, 255, 0.5);
+  
+  --sidebar-text: rgba(255, 255, 255, 0.6);
+  --sidebar-text-hover: #ffffff;
+  
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-hover: rgba(255, 255, 255, 0.15);
+  --accent-color: #8A2BE2;
+}
 
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+:root {
+  /* ... tus variables de colores existentes ... */
+
+  /* VARIABLES DE DENSIDAD DE CUADRÍCULA (Nivel 2 - Normal por defecto) */
+  --grid-padding: 12px 25px;
+  --grid-font-size: 0.95rem;
+  --grid-cover-size: 45px;
+  --grid-gap: 15px;
+}
+
+/* Nivel 1 - Compacto (Ideal para ver muchas canciones a la vez) */
+body.density-1 {
+  --grid-padding: 6px 15px;
+  --grid-font-size: 0.85rem;
+  --grid-cover-size: 32px;
+  --grid-gap: 10px;
+}
+
+/* Nivel 3 - Relajado (Ideal para pantallas grandes y táctiles) */
+body.density-3 {
+  --grid-padding: 18px 35px;
+  --grid-font-size: 1.05rem;
+  --grid-cover-size: 60px;
+  --grid-gap: 20px;
+}
+
+body.light-theme {
+  /* TEMA CLARO (Blanco Hueso sólido) */
+  --bg-main: #f8f9fa; 
+  --bg-sidebar: #1e2a44; 
+  --bg-card: rgba(255, 255, 255, 0.95); 
+  --text-main: #1a1a2e; 
+  --text-muted: #64748b; 
+  
+  --sidebar-text: rgba(255, 255, 255, 0.75);
+  --sidebar-text-hover: #ffffff;
+  
+  --glass-bg: rgba(0, 0, 0, 0.03);
+  --glass-border: rgba(0, 0, 0, 0.12);
+  --glass-hover: rgba(0, 0, 0, 0.08);
+  --accent-color: #6d28d9;
+}
+
+/* =========================================
+   2. RESET GLOBAL Y BASES RESPONSIVE
+========================================= */
+*, *::before, *::after {
+  box-sizing: border-box; 
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+  /* CRÍTICO: Usamos 'background' en vez de 'background-color' para permitir degradados */
+  background: var(--bg-main);
+  background-attachment: fixed; /* Evita que el degradado se distorsione al hacer scroll */
+  color: var(--text-main);
+  transition: background 0.4s ease, color 0.4s ease;
+}
+
+/* =========================================
+   3. ARQUITECTURA DEL CONTENEDOR (LAYOUT)
+========================================= */
+.main-content {
+  padding: 25px 40px; 
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.main-content > *:not(router-outlet) {
+  display: flex;
+  flex-direction: column;
+  gap: 30px; 
+  width: 100%;
+  height: 100%;
+}
+
+router-outlet {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .main-content { padding: 15px 20px; }
+  .main-content > *:not(router-outlet) { gap: 20px; }
+}
+
+/* =========================================
+   4. BARRA SUPERIOR (BÚSQUEDA Y FILTROS)
+========================================= */
+.top-header {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+  width: 100%;
+}
+
+.search-box {
+  display: flex; 
+  align-items: center; 
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 50px;
+  padding: 5px 8px 5px 25px; 
+  transition: all 0.3s ease;
+}
+
+.search-box:focus-within {
+  border-color: var(--accent-color); 
+  background: var(--glass-hover);
+  box-shadow: 0 0 15px rgba(138, 43, 226, 0.1);
+}
+
+.search-box input { 
+  flex-grow: 1; 
+  background: transparent; 
+  border: none; 
+  color: var(--text-main); 
+  font-family: 'Outfit', sans-serif; 
+  font-size: 1rem; 
+  outline: none; 
+}
+
+.search-box input::placeholder { 
+  color: var(--text-muted); 
+}
+
+.search-divider { 
+  width: 1px; 
+  height: 24px; 
+  background: var(--glass-border); 
+  margin: 0 10px; 
+}
+
+.search-btn-icon {
+  background: var(--glass-bg); 
+  border: none; 
+  color: var(--text-main); 
+  border-radius: 50%; 
+  width: 36px; 
+  height: 36px;
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  cursor: pointer; 
+  transition: all 0.3s ease;
+}
+
+.search-btn-icon:hover { 
+  background: var(--accent-color); 
+  transform: scale(1.05); 
+  color: white; 
+}
+
+/* =========================================
+   5. FILTROS Y ORDENAMIENTO (CHIPS)
+========================================= */
+.filters-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.filter-label { 
+  font-weight: 800; 
+  margin-right: 5px; 
+  color: var(--text-muted); 
+}
+
+.filter-divider { 
+  width: 1px; 
+  height: 18px; 
+  background: var(--glass-border); 
+  margin: 0 10px; 
+}
+
+.chip-split {
+  display: flex; 
+  align-items: stretch; 
+  background: var(--glass-bg); 
+  border: 1px solid var(--glass-border); 
+  border-radius: 50px; 
+  color: var(--text-main); 
+  font-family: 'Outfit', sans-serif; 
+  transition: all 0.2s ease; 
+  overflow: hidden;
+}
+
+.chip-split.active {
+  background: rgba(138, 43, 226, 0.15); 
+  border-color: var(--accent-color); 
+  color: var(--accent-color);
+}
+
+.chip-text { 
+  padding: 8px 18px; 
+  cursor: pointer; 
+  display: flex; 
+  align-items: center; 
+  transition: background 0.2s; 
+}
+
+.chip-text:hover { 
+  background: var(--glass-hover); 
+}
+
+.chip-arrow {
+  padding: 8px 15px 8px 10px; 
+  cursor: pointer; 
+  display: flex; 
+  align-items: center;
+  border-left: 1px solid var(--glass-border);
+  transition: background 0.2s;
+}
+
+.chip-arrow:hover { 
+  background: var(--glass-hover); 
+}
+
+.sort-icon { 
+  font-size: 18px !important; 
+  width: 18px !important; 
+  height: 18px !important; 
+  transform: scale(1); 
+}
+
+/* =========================================
+   6. EXPANSIÓN DINÁMICA DE FORMATOS
+========================================= */
+.format-expander {
+  display: flex; 
+  align-items: stretch; 
+  background: transparent; 
+  border-radius: 50px;
+  transition: all 0.4s ease;
+}
+
+.format-expander.expanded {
+  background: var(--glass-bg); 
+  border: 1px solid var(--glass-border); 
+  padding: 2px; 
+  gap: 5px;
+}
+
+.chip-btn {
+  background: var(--glass-bg); 
+  border: 1px solid var(--glass-border); 
+  color: var(--text-main);
+  padding: 8px 20px; 
+  border-radius: 50px; 
+  cursor: pointer; 
+  font-family: 'Outfit', sans-serif; 
+  transition: all 0.2s ease;
+  display: flex; 
+  align-items: center; 
+  gap: 8px;
+}
+
+.chip-btn:hover { 
+  background: var(--glass-hover); 
+}
+
+.chip-btn.format-active { 
+  border-color: var(--accent-color); 
+  color: var(--accent-color); 
+}
+
+.format-options {
+  display: flex; 
+  flex-wrap: nowrap; 
+  white-space: nowrap; 
+  max-width: 0; 
+  overflow: hidden; 
+  opacity: 0; 
+  pointer-events: none;
+  transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.format-expander.expanded .format-options {
+  max-width: 500px; 
+  opacity: 1; 
+  pointer-events: auto; 
+  padding-right: 5px; 
+  gap: 5px;
+}
+
+.option-btn { 
+  border: none; 
+  background: transparent; 
+  flex-shrink: 0; 
+}
+
+.option-btn:hover { 
+  background: var(--glass-hover); 
+}
+
+.option-btn.active { 
+  background: var(--accent-color); 
+  color: white; 
+}
+
+/* =========================================
+   7. DATA GRID (CRISTAL PRINCIPAL)
+========================================= */
+.table-glass-container {
+  flex-grow: 1; 
+  background: var(--bg-card); 
+  backdrop-filter: blur(15px); 
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid var(--glass-border); 
+  border-radius: 20px; 
+  padding: 20px; 
+  display: flex; 
+  flex-direction: column;
+  justify-content: center; 
+  align-items: center; 
+  color: var(--text-muted);
+}

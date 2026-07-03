@@ -1,0 +1,66 @@
+<div class="edit-overlay" *ngIf="song" [class.closing]="isClosing" (click)="cancel()">
+  <div class="edit-modal" (click)="$event.stopPropagation()">
+    
+    <div class="dynamic-bg" [style.backgroundImage]="'url(' + editedSong.coverUrl + ')'"></div>
+
+    <div class="modal-content-glass">
+      
+      <div class="edit-header">
+        <h2>Auditoría de Metadatos</h2>
+        <button class="close-icon" (click)="cancel()"><mat-icon>close</mat-icon></button>
+      </div>
+
+      <div class="edit-body">
+        <div class="cover-section">
+          <img [src]="editedSong.coverUrl" alt="Cover">
+          <button class="btn-rescan"><mat-icon>image_search</mat-icon> Buscar Alta Calidad</button>
+        </div>
+
+        <div class="form-section">
+          <div class="form-group full-width">
+            <label>Título</label>
+            <input type="text" class="lov-input" [(ngModel)]="editedSong.title">
+          </div>
+          
+          <div class="form-group full-width">
+            <label>Artista</label>
+            <input type="text" class="lov-input" [(ngModel)]="editedSong.artist">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Álbum</label>
+              <input type="text" class="lov-input" [(ngModel)]="editedSong.album">
+            </div>
+            <div class="form-group">
+              <label>Compositor</label>
+              <input type="text" class="lov-input" [(ngModel)]="editedSong.composer">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Género</label>
+              <input type="text" class="lov-input" [(ngModel)]="editedSong.genre">
+            </div>
+            <div class="form-group">
+              <label>Año</label>
+              <input type="number" class="lov-input" [(ngModel)]="editedSong.year">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="lyrics-section">
+        <label>Sincronización de Letras (Lyrics)</label>
+        <textarea class="lov-input lyrics-area" [(ngModel)]="editedSong.lyrics"></textarea>
+      </div>
+
+      <div class="edit-footer">
+        <button class="btn-reset" (click)="resetChanges()">Restaurar Original</button>
+        <button class="btn-save" (click)="confirmSave()">Guardar Cambios</button>
+      </div>
+
+    </div>
+  </div>
+</div>

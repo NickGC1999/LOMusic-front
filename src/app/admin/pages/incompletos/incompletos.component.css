@@ -1,0 +1,84 @@
+/* --- ESTILOS DE LA CABECERA (Deuda Técnica) --- */
+.top-header { display: flex; flex-direction: column; gap: 25px; width: 100%; }
+.search-box { display: flex; align-items: center; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 50px; padding: 5px 8px 5px 25px; transition: all 0.3s ease; }
+.search-box:focus-within { border-color: var(--accent-color); background: var(--glass-hover); box-shadow: 0 0 15px rgba(138, 43, 226, 0.1); }
+.search-box input { flex-grow: 1; background: transparent; border: none; color: var(--text-main); font-family: 'Outfit', sans-serif; font-size: 1rem; outline: none; }
+.search-box input::placeholder { color: var(--text-muted); }
+.search-divider { width: 1px; height: 24px; background: var(--glass-border); margin: 0 10px; }
+.search-btn-icon { background: var(--glass-bg); border: none; color: var(--text-main); border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s ease; }
+.search-btn-icon:hover { background: var(--accent-color); transform: scale(1.05); color: white; }
+.filters-container { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; width: 100%; }
+.filter-label { font-weight: 800; margin-right: 5px; color: var(--text-muted); }
+.filter-divider { width: 1px; height: 18px; background: var(--glass-border); margin: 0 10px; }
+.chip-split { display: flex; align-items: stretch; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 50px; color: var(--text-main); font-family: 'Outfit', sans-serif; transition: all 0.2s ease; overflow: hidden; }
+.chip-split.active { background: rgba(138, 43, 226, 0.15); border-color: var(--accent-color); color: var(--accent-color); }
+.chip-text { padding: 8px 18px; cursor: pointer; display: flex; align-items: center; transition: background 0.2s; }
+.chip-text:hover { background: var(--glass-hover); }
+.chip-arrow { padding: 8px 15px 8px 10px; cursor: pointer; display: flex; align-items: center; border-left: 1px solid var(--glass-border); transition: background 0.2s; }
+.chip-arrow:hover { background: var(--glass-hover); }
+.sort-icon { font-size: 18px !important; width: 18px !important; height: 18px !important; }
+.format-expander { display: flex; align-items: stretch; background: transparent; border-radius: 50px; transition: all 0.4s ease; }
+.format-expander.expanded { background: var(--glass-bg); border: 1px solid var(--glass-border); padding: 2px; gap: 5px; }
+.chip-btn { background: var(--glass-bg); border: 1px solid var(--glass-border); color: var(--text-main); padding: 8px 20px; border-radius: 50px; cursor: pointer; font-family: 'Outfit', sans-serif; transition: all 0.2s ease; display: flex; align-items: center; gap: 8px; }
+.chip-btn:hover { background: var(--glass-hover); }
+.chip-btn.format-active { border-color: var(--accent-color); color: var(--accent-color); }
+.format-options { display: flex; flex-wrap: nowrap; white-space: nowrap; max-width: 0; overflow: hidden; opacity: 0; pointer-events: none; transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1); }
+.format-expander.expanded .format-options { max-width: 500px; opacity: 1; pointer-events: auto; padding-right: 5px; gap: 5px; }
+.option-btn { border: none; background: transparent; flex-shrink: 0; }
+.option-btn:hover { background: var(--glass-hover); }
+.option-btn.active { background: var(--accent-color); color: white; }
+
+/* --- DISEÑO DEL ESTADO VACÍO --- */
+.empty-state-override {
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.empty-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 450px;
+  animation: fadeIn 0.5s ease;
+}
+
+.icon-ring {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: rgba(138, 43, 226, 0.1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 25px;
+  color: var(--accent-color);
+  box-shadow: 0 0 30px rgba(138, 43, 226, 0.2);
+}
+
+.icon-ring mat-icon {
+  font-size: 45px;
+  width: 45px;
+  height: 45px;
+}
+
+.empty-content h2 {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--text-main);
+  margin: 0 0 10px 0;
+}
+
+.empty-content p {
+  font-size: 1rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}

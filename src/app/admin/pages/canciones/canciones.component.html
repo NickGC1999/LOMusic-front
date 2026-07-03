@@ -1,1 +1,108 @@
-<p>canciones works!</p>
+<header class="top-header">
+  <div class="search-box">
+    <input type="text" placeholder="Escribe la canción, artista o álbum que buscas...">
+    <div class="search-divider"></div>
+    <button class="search-btn-icon"><mat-icon>search</mat-icon></button>
+  </div>
+
+  <div class="filters-container">
+    <span class="filter-label">Ordenar por:</span>
+    
+    <div class="chip-split" [class.active]="activeSort === 'name'">
+      <div class="chip-text" (click)="toggleSort('name')">Nombre</div>
+      <div class="chip-arrow" *ngIf="activeSort === 'name'" (click)="changeDirection($event)">
+        <mat-icon class="sort-icon">{{ sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
+      </div>
+    </div>
+
+    <div class="chip-split" [class.active]="activeSort === 'date'">
+      <div class="chip-text" (click)="toggleSort('date')">Fecha</div>
+      <div class="chip-arrow" *ngIf="activeSort === 'date'" (click)="changeDirection($event)">
+        <mat-icon class="sort-icon">{{ sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
+      </div>
+    </div>
+
+    <div class="chip-split" [class.active]="activeSort === 'artist'">
+      <div class="chip-text" (click)="toggleSort('artist')">Artista</div>
+      <div class="chip-arrow" *ngIf="activeSort === 'artist'" (click)="changeDirection($event)">
+        <mat-icon class="sort-icon">{{ sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
+      </div>
+    </div>
+
+    <div class="chip-split" [class.active]="activeSort === 'album'">
+      <div class="chip-text" (click)="toggleSort('album')">Álbum</div>
+      <div class="chip-arrow" *ngIf="activeSort === 'album'" (click)="changeDirection($event)">
+        <mat-icon class="sort-icon">{{ sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
+      </div>
+    </div>
+
+    <div class="chip-split" [class.active]="activeSort === 'duration'">
+      <div class="chip-text" (click)="toggleSort('duration')">Duración</div>
+      <div class="chip-arrow" *ngIf="activeSort === 'duration'" (click)="changeDirection($event)">
+        <mat-icon class="sort-icon">{{ sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
+      </div>
+    </div>
+
+    <div class="filter-divider"></div>
+    <span class="filter-label">Filtros:</span>
+
+    <div class="format-expander" [class.expanded]="isFormatExpanded">
+      <button class="chip-btn trigger-btn" [class.format-active]="activeFormat !== null" (click)="isFormatExpanded = !isFormatExpanded">
+        Formato <mat-icon class="sort-icon">{{ isFormatExpanded ? 'chevron_left' : 'chevron_right' }}</mat-icon>
+      </button>
+      
+      <div class="format-options">
+        <button class="chip-btn option-btn" [class.active]="activeFormat === 'MP3'" (click)="selectFormat('MP3')">MP3</button>
+        <button class="chip-btn option-btn" [class.active]="activeFormat === 'FLAC'" (click)="selectFormat('FLAC')">FLAC</button>
+        <button class="chip-btn option-btn" [class.active]="activeFormat === 'WAV'" (click)="selectFormat('WAV')">WAV</button>
+        <button class="chip-btn option-btn" [class.active]="activeFormat === 'Hi-Res'" (click)="selectFormat('Hi-Res')">Hi-Res</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ==========================================
+     2. DATA GRID: LISTADO DE CANCIONES
+=========================================== -->
+<div class="table-glass-container list-override">
+  
+  <div class="song-table">
+    <!-- Encabezado de la tabla -->
+    <div class="song-header">
+      <div class="col-index">#</div>
+      <div class="col-cover">COVER</div>
+      <div class="col-title">TITLE</div>
+      <div class="col-artist">ARTIST</div>
+      <div class="col-album">ALBUM</div>
+      <div class="col-time">TIME</div>
+      <div class="col-format">FORMAT</div>
+    </div>
+
+    <!-- Iteración Reactiva de Canciones -->
+    <div class="song-row" *ngFor="let song of canciones$ | async; let i = index" (click)="openEditModal(song)">
+      <div class="col-index">{{ i + 1 }}</div>
+      
+      <div class="col-cover">
+        <img [src]="song.coverUrl" [alt]="song.album" loading="lazy">
+      </div>
+      
+      <div class="col-title">{{ song.title }}</div>
+      <div class="col-artist">{{ song.artist }}</div>
+      <div class="col-album">{{ song.album }}</div>
+      <div class="col-time">{{ song.duration }}</div>
+      <div class="col-format">{{ song.format }}</div>
+    </div>
+
+    <!-- Feedback de carga simulada -->
+    <div class="loading-state" *ngIf="!(canciones$ | async)">
+      Cargando biblioteca de alta fidelidad...
+    </div>
+  </div>
+</div>
+
+<app-edit-modal 
+  [song]="selectedSong" 
+  [isClosing]="isClosingModal" 
+  (close)="closeEditModal()" 
+  (save)="saveChanges($event)">
+</app-edit-modal>

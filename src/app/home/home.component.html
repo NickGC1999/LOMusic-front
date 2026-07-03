@@ -1,36 +1,101 @@
 <div class="fondo-animado">
   <div class="collage-contenedor">
-    
     <div class="bloque-relativo">
       <img src="assets/collage.PNG" alt="Fondo musical LOMusic">
     </div>
-
     <div class="bloque-relativo">
       <img src="assets/collage.PNG" alt="Fondo musical LOMusic">
     </div>
-
   </div>
 </div>
 
 <div class="filtro-oscuro"></div>
-
 <div class="gradiente-inferior"></div>
 
 <div class="ui-contenedor">
   
   <div class="header-titulos">
     <h1 class="logo">
-      <span class="lom">LOM</span><span class="usic">usic</span>
+      <div class="hero-l-wave">
+        <div class="hero-wave-bar"></div>
+        <div class="hero-wave-bar"></div>
+        <div class="hero-wave-bar"></div>
+      </div>
+      <span class="om">OM</span><span class="usic">usic</span>
     </h1>
     <p class="slogan">Auditoría acústica para tu colección en alta fidelidad.</p>
   </div>
   
-  <button mat-raised-button routerLink="/admin" class="boton-empezar">
-  Empezar
-</button>
+  <button mat-raised-button (click)="startApplication()" class="boton-empezar">
+    Empezar
+  </button>
 
   <div class="footer-enlaces">
-    <button class="enlace-texto">¿Quiénes somos?</button>
-    <button class="enlace-texto">Preguntas frecuentes</button>
+    <button class="enlace-texto" (click)="openModal('about')">¿Quiénes somos?</button>
+    <button class="enlace-texto" (click)="openModal('faq')">Preguntas frecuentes</button>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="activeModal" [class.closing]="isClosingModal" (click)="closeModal()">
+  <div class="glass-info-modal" (click)="$event.stopPropagation()">
+    
+    <button class="close-modal-btn" (click)="closeModal()">✕</button>
+
+    <div *ngIf="activeModal === 'about'" class="modal-content">
+      <div class="modal-badge">FILOSOFÍA DE DISEÑO Y ARQUITECTURA</div>
+      <h2>¿Quiénes Somos en LOMusic?</h2>
+      <p class="lead-text">
+        Somos apasionados por la ingeniería de software y la excelencia acústica, enfocados en devolverle al usuario el control absoluto sobre sus archivos digitales de música en almacenamiento local.
+      </p>
+      <div class="info-section">
+        <h3>El Fin de LOMusic</h3>
+        <p>
+          En la era del streaming masivo, las colecciones locales en alta fidelidad (archivos <strong>.FLAC, WAV y Hi-Res</strong>) sufren a menudo de metadatos fragmentados. <strong>LOMusic (Local Organized Music)</strong> nació para actuar como un entorno de auditoría local inteligente capaz de reconstruir, clasificar y enriquecer tu biblioteca física con un rigor técnico impecable.
+        </p>
+      </div>
+      <div class="info-section">
+        <h3>Experiencia de Usuario (UX) Inmersiva</h3>
+        <p>
+          Diseñamos nuestra interfaz bajo pautas estrictas de armonía visual, utilizando cristales dinámicos (<em>glassmorphism</em>), transiciones vectoriales a 60 FPS y micro-animaciones armónicas que hacen que auditar y organizar miles de archivos sea una experiencia fluida, intuitiva y visualmente deslumbrante.
+        </p>
+      </div>
+    </div>
+
+    <div *ngIf="activeModal === 'faq'" class="modal-content">
+      <div class="modal-badge">MARCO LEGAL Y OPERATIVO</div>
+      <h2>Preguntas Frecuentes (FAQ)</h2>
+      <div class="faq-item">
+        <h3>¿LOMusic descarga o distribuye música desde internet?</h3>
+        <p>
+          <strong>Rotundamente no.</strong> LOMusic es una herramienta de gestión y auditoría 100% enfocada en archivos locales. No funcionamos para piratería, no descargamos archivos de audio protegidos por derechos de autor ni poseemos servidores de distribución de contenido infractor.
+        </p>
+      </div>
+      <div class="faq-item">
+        <h3>¿Cómo funciona la auditoría de álbumes y pistas faltantes?</h3>
+        <p>
+          Nuestro algoritmo escanea y lee en milisegundos las etiquetas locales de tu disco duro. Al ingresar a la vista de un álbum, cruzamos tus archivos físicos contra bases de datos discográficas oficiales para mostrarte exactamente qué pistas posees en calidad Hi-Fi y cuáles te faltan para completar tu disco físico.
+        </p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="modal-overlay initial-scan-overlay" *ngIf="isScanning">
+  <div class="scan-loading-box">
+    
+    <div class="loading-l-wave">
+      <div class="load-bar"></div>
+      <div class="load-bar"></div>
+      <div class="load-bar"></div>
+    </div>
+
+    <h2 class="scan-loading-title">Indexando LOMusic</h2>
+    <p class="scan-loading-text">{{ currentStatusText }}</p>
+    
+    <div class="progress-track">
+      <div class="progress-bar-fill"></div>
+    </div>
+
   </div>
 </div>

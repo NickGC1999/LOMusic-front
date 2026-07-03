@@ -1,1 +1,115 @@
-<p>carpetas works!</p>
+<header class="top-header">
+  <div class="search-box">
+    <input type="text" placeholder="Busca en tus directorios...">
+    <div class="search-divider"></div>
+    <button class="search-btn-icon"><mat-icon>search</mat-icon></button>
+  </div>
+
+  <div class="filters-container">
+    <span class="filter-label">Reestructurar carpetas por:</span>
+    <div class="chip-split" [class.active]="groupingBy === 'artist'" (click)="requestGroupChange('artist')">
+      <div class="chip-text">Artista</div>
+    </div>
+    <div class="chip-split" [class.active]="groupingBy === 'year'" (click)="requestGroupChange('year')">
+      <div class="chip-text">Año</div>
+    </div>
+    <div class="chip-split" [class.active]="groupingBy === 'genre'" (click)="requestGroupChange('genre')">
+      <div class="chip-text">Género</div>
+    </div>
+    <div class="chip-split" [class.active]="groupingBy === 'format'" (click)="requestGroupChange('format')">
+      <div class="chip-text">Calidad</div>
+    </div>
+  </div>
+</header>
+
+<div class="table-glass-container list-override">
+  
+  <div class="explorer-path-bar">
+    <mat-icon class="home-icon">computer</mat-icon>
+    <mat-icon class="crumb-separator">chevron_right</mat-icon>
+    
+    <ng-container *ngFor="let node of currentPath; let i = index; let isLast = last">
+      <span class="crumb" [class.active]="isLast" (click)="goToBreadcrumb(i)">
+        {{ node.label }}
+      </span>
+      <mat-icon class="crumb-separator" *ngIf="!isLast">chevron_right</mat-icon>
+    </ng-container>
+  </div>
+
+  <div class="loading-overlay" *ngIf="isLoading">
+    <div class="giant-l-wave">
+      <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+    </div>
+    <h3>Reestructurando Sistema de Archivos...</h3>
+    <p>Moviendo pistas físicamente en el disco.</p>
+  </div>
+
+  <div class="explorer-content" *ngIf="!isLoading">
+    
+    <div class="folders-grid" *ngIf="viewMode === 'folders'">
+      <div class="win-folder" *ngFor="let folder of foldersToDisplay" (click)="openFolder(folder)">
+        
+        <div class="win-icon-wrapper" *ngIf="!folder.coverUrl">
+          <mat-icon>folder</mat-icon>
+        </div>
+
+        <div class="win-cover-wrapper" *ngIf="folder.coverUrl">
+          <img [src]="folder.coverUrl" alt="Album">
+        </div>
+
+        <div class="win-folder-info">
+          <span class="win-name">{{ folder.name }}</span>
+          <span class="win-count">{{ folder.count }} item(s)</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="song-table" *ngIf="viewMode === 'songs'">
+      <div class="song-header">
+        <div class="col-index">#</div>
+        <div class="col-cover">COVER</div>
+        <div class="col-title">TITLE</div>
+        <div class="col-artist">ARTIST</div>
+        <div class="col-album">ALBUM</div>
+        <div class="col-time">TIME</div>
+        <div class="col-format">FORMAT</div>
+      </div>
+
+      <div class="song-row" *ngFor="let song of songsToDisplay; let i = index" (click)="openEditModal(song)">
+        <div class="col-index">{{ i + 1 }}</div>
+        <div class="col-cover"><img [src]="song.coverUrl" alt="cover"></div>
+        <div class="col-title">{{ song.title }}</div>
+        <div class="col-artist">{{ song.artist }}</div>
+        <div class="col-album">{{ song.album }}</div>
+        <div class="col-time">{{ song.duration }}</div>
+        <div class="col-format">{{ song.format }}</div>
+      </div>
+      
+    </div>
+
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="isConfirmModalOpen" [class.closing]="isModalClosing" (click)="cancelGroupChange()">
+  <div class="glass-modal warning-modal" (click)="$event.stopPropagation()">
+    <div class="warning-icon-bg">
+      <mat-icon>warning_amber</mat-icon>
+    </div>
+    <h2>Modificación del Directorio Raíz</h2>
+    <p>
+      Estás a punto de reestructurar físicamente tus archivos locales por <strong>{{ pendingGroupSelection | uppercase }}</strong>. 
+      LOMusic moverá las pistas de audio a nuevas carpetas en tu disco duro.
+    </p>
+    <div class="modal-actions">
+      <button class="btn-cancel" (click)="cancelGroupChange()">Cancelar</button>
+      <button class="btn-danger" (click)="confirmGroupChange()">Proceder</button>
+    </div>
+  </div>
+</div>
+
+<app-edit-modal 
+  [song]="selectedSong" 
+  [isClosing]="isClosingEditModal" 
+  (close)="closeEditModal()" 
+  (save)="saveChanges($event)">
+</app-edit-modal>
