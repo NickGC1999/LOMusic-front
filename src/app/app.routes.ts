@@ -10,6 +10,7 @@ import { AlbumesComponent } from './admin/pages/albumes/albumes.component';
 import { GenerosComponent } from './admin/pages/generos/generos.component';
 import { IncompletosComponent } from './admin/pages/incompletos/incompletos.component';
 import { DuplicadosComponent } from './admin/pages/duplicados/duplicados.component';
+import { ModificadosComponent } from './admin/pages/modificados/modificados.component';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -24,6 +25,7 @@ export const routes: Routes = [
       { path: 'albumes', component: AlbumesComponent },
       { path: 'generos', component: GenerosComponent },
       { path: 'incompletos', component: IncompletosComponent },
+      { path: 'modificados', component: ModificadosComponent },
       { path: 'duplicados', component: DuplicadosComponent }
     ]
   },

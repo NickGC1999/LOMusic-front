@@ -5,60 +5,144 @@
 
     <div class="modal-content-glass">
       
-      <div class="edit-header">
-        <h2>Auditoría de Metadatos</h2>
-        <button class="close-icon" (click)="cancel()"><mat-icon>close</mat-icon></button>
-      </div>
-
-      <div class="edit-body">
-        <div class="cover-section">
-          <img [src]="editedSong.coverUrl" alt="Cover">
-          <button class="btn-rescan"><mat-icon>image_search</mat-icon> Buscar Alta Calidad</button>
+      <div class="view-transition-box" *ngIf="!showDeleteConfirm && rescanState === 'idle'">
+        <div class="edit-header">
+          <h2>Auditoría de Estudio y Metadatos</h2>
+          <button class="close-icon" (click)="cancel()"><mat-icon>close</mat-icon></button>
         </div>
 
-        <div class="form-section">
-          <div class="form-group full-width">
-            <label>Título</label>
-            <input type="text" class="lov-input" [(ngModel)]="editedSong.title">
+        <div class="edit-body-expanded">
+          <div class="cover-section-large">
+            <img [src]="editedSong.coverUrl" alt="Cover">
+            <div class="cover-actions">
+              <button class="btn-cover-action" (click)="changeCoverArt()">
+                <mat-icon>add_photo_alternate</mat-icon> Cambiar Portada
+              </button>
+              <button class="btn-cover-action search-ai" (click)="searchHighResCover()">
+                <mat-icon>auto_awesome</mat-icon> Buscar Arte HQ
+              </button>
+            </div>
           </div>
+
+          <div class="form-section-grid">
+            
+            <div class="form-group full-width">
+              <label>Título de la Canción</label>
+              <input type="text" class="lov-input" [(ngModel)]="editedSong.title">
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Artista Principal</label>
+                <input type="text" class="lov-input" [(ngModel)]="editedSong.artist">
+              </div>
+              <div class="form-group">
+                <label>Intérprete del Álbum (Album Artist)</label>
+                <input type="text" class="lov-input" [(ngModel)]="editedSong.albumArtist">
+              </div>
+            </div>
+
+            <div class="form-row-3">
+              <div class="form-group">
+                <label>Álbum</label>
+                <input type="text" class="lov-input" [(ngModel)]="editedSong.album">
+              </div>
+              <div class="form-group mini">
+                <label>Nº Pista</label>
+                <input type="number" class="lov-input" [(ngModel)]="editedSong.trackNumber">
+              </div>
+              <div class="form-group mini">
+                <label>Nº Disco</label>
+                <input type="number" class="lov-input" [(ngModel)]="editedSong.discNumber">
+              </div>
+            </div>
+
+            <div class="form-row-3">
+              <div class="form-group">
+                <label>Género</label>
+                <input type="text" class="lov-input" [(ngModel)]="editedSong.genre">
+              </div>
+              <div class="form-group">
+                <label>Año</label>
+                <input type="number" class="lov-input" [(ngModel)]="editedSong.year">
+              </div>
+              <div class="form-group">
+                <label>Compositor</label>
+                <input type="text" class="lov-input" [(ngModel)]="editedSong.composer">
+              </div>
+            </div>
+
+            <div class="form-row-3">
+              <div class="form-group mini">
+                <label>BPM</label>
+                <input type="number" class="lov-input" [(ngModel)]="editedSong.bpm" placeholder="Ej. 120">
+              </div>
+              <div class="form-group mini">
+                <label>Tonalidad (Key)</label>
+                <input type="text" class="lov-input" [(ngModel)]="editedSong.initialKey" placeholder="Ej. Am / 8A">
+              </div>
+              <div class="form-group">
+                <label>Sello / Discográfica</label>
+                <input type="text" class="lov-input" [(ngModel)]="editedSong.publisher">
+              </div>
+            </div>
+
+            <div class="form-group full-width">
+              <label>Copyright / Aviso Legal</label>
+              <input type="text" class="lov-input" [(ngModel)]="editedSong.copyright" placeholder="Ej. ℗ 2026 LP under exclusive license">
+            </div>
+
+          </div>
+        </div>
+
+        <div class="lyrics-section">
+          <label>Sincronización de Letras (Lyrics)</label>
+          <textarea class="lov-input lyrics-area" [(ngModel)]="editedSong.lyrics"></textarea>
+        </div>
+
+        <div class="tech-specs-readonly">
+          <div class="spec-badge"><mat-icon>audiotrack</mat-icon> Formato: <strong>{{ editedSong.format }}</strong></div>
+          <div class="spec-badge"><mat-icon>high_quality</mat-icon> Bitrate: <strong>{{ editedSong.bitrate ? Math.round(editedSong.bitrate / 1000) : 'N/A' }} kbps</strong></div>
+          <div class="spec-badge"><mat-icon>speed</mat-icon> Frecuencia: <strong>{{ editedSong.sampleRate || 'N/A' }} Hz</strong></div>
+          <div class="spec-badge path-badge" [title]="editedSong.filePath"><mat-icon>folder</mat-icon> Ruta: <span>{{ editedSong.filePath }}</span></div>
+        </div>
+
+        <div class="edit-footer">
+          <button class="btn-delete" (click)="requestDelete()">
+            <mat-icon>delete_outline</mat-icon> Eliminar
+          </button>
           
-          <div class="form-group full-width">
-            <label>Artista</label>
-            <input type="text" class="lov-input" [(ngModel)]="editedSong.artist">
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>Álbum</label>
-              <input type="text" class="lov-input" [(ngModel)]="editedSong.album">
-            </div>
-            <div class="form-group">
-              <label>Compositor</label>
-              <input type="text" class="lov-input" [(ngModel)]="editedSong.composer">
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>Género</label>
-              <input type="text" class="lov-input" [(ngModel)]="editedSong.genre">
-            </div>
-            <div class="form-group">
-              <label>Año</label>
-              <input type="number" class="lov-input" [(ngModel)]="editedSong.year">
-            </div>
-          </div>
+          <button class="btn-rollback" (click)="startRescanProcess()">
+            <mat-icon>sync</mat-icon> Volver a escanear
+          </button>
+          
+          <button class="btn-save" (click)="confirmSave()">
+            <mat-icon>check</mat-icon> Guardar Cambios
+          </button>
         </div>
       </div>
 
-      <div class="lyrics-section">
-        <label>Sincronización de Letras (Lyrics)</label>
-        <textarea class="lov-input lyrics-area" [(ngModel)]="editedSong.lyrics"></textarea>
+      <div class="delete-confirm-box view-transition-box" *ngIf="showDeleteConfirm">
+        <mat-icon class="warn-icon">delete_forever</mat-icon>
+        <h3>¿Seguro que quieres borrar esta canción permanentemente?</h3>
+        <p>Se eliminará el archivo de tu disco local y no podrá recuperarse.</p>
+        <div class="confirm-actions">
+          <button class="btn-cancel-del" (click)="showDeleteConfirm = false">Cancelar</button>
+          <button class="btn-confirm-del" (click)="executePhysicalDelete()">Sí, eliminar</button>
+        </div>
       </div>
 
-      <div class="edit-footer">
-        <button class="btn-reset" (click)="resetChanges()">Restaurar Original</button>
-        <button class="btn-save" (click)="confirmSave()">Guardar Cambios</button>
+      <div class="rescan-box view-transition-box" *ngIf="rescanState === 'loading'">
+        <div class="loading-l-wave"><div class="load-bar"></div><div class="load-bar"></div><div class="load-bar"></div></div>
+        <h3>Analizando huella acústica física...</h3>
+        <p>Reconstruyendo metadatos desde el estándar canónico del archivo.</p>
+      </div>
+
+      <div class="rescan-box success-box view-transition-box" *ngIf="rescanState === 'success'">
+        <mat-icon class="success-icon">check_circle_outline</mat-icon>
+        <h3>Escaneo Completo</h3>
+        <p>Los metadatos oficiales han sido recuperados y aplicados.</p>
+        <button class="btn-accept-rescan" (click)="acceptRescan()">Aceptar</button>
       </div>
 
     </div>

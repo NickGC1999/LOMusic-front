@@ -100,9 +100,11 @@
   </div>
 </div>
 
-<app-edit-modal 
-  [song]="selectedSong" 
-  [isClosing]="isClosingModal" 
-  (close)="closeEditModal()" 
-  (save)="saveChanges($event)">
+<app-edit-modal
+  *ngIf="selectedSong"
+  [song]="selectedSong"
+  [isClosing]="isClosingModal"
+  (close)="closeEditModal()"
+  (save)="onSongSaved($event)"
+  (delete)="onSongDeleted($event)">
 </app-edit-modal>

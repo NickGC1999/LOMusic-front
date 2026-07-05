@@ -224,13 +224,13 @@ export class ArtistasComponent implements OnInit {
       const localTracksOnly: TrackDisplay[] = this.artistLocalSongs
         .filter(s => s.album === album.title)
         .map((s, idx) => ({
-          trackNumber: s.track || idx + 1,
+          trackNumber: s.trackNumber || s.track || idx + 1,
           title: s.title,
           artist: s.artist,
           album: s.album,
-          duration: s.duration,
+          duration: s.duration || '0:00',
           format: s.format,
-          coverUrl: s.coverUrl,
+          coverUrl: s.coverUrl || '',
           isLocal: true,
           localSongData: s
         })).sort((a, b) => a.trackNumber - b.trackNumber);
@@ -250,8 +250,14 @@ export class ArtistasComponent implements OnInit {
     this.selectedAlbum = null;
   }
 
-  openSongEdit(song?: Song) {
-    if (song) this.songToEdit = song;
+  openSongEdit(item: any) {
+    // Si el ítem al que dimos clic tiene localSongData adentro (es un TrackDisplay), sacamos la canción real.
+    // Si no lo tiene (es decir, ya es la canción directa desde la tabla general), la usamos directo.
+    const realSong = item && item.localSongData ? item.localSongData : item;
+    
+    if (realSong) {
+      this.songToEdit = realSong;
+    }
   }
 
   closeEditModal() {

@@ -2,7 +2,8 @@ import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { FormsModule } from '@angular/forms';
-import { Song } from '../../../core/mocks/canciones.mock';
+import { CancionesService } from '../../../core/services/canciones.service';
+import { Song } from '../../../core/models/song.model';
 
 @Component({
   selector: 'app-edit-modal',
@@ -12,40 +13,76 @@ import { Song } from '../../../core/mocks/canciones.mock';
   styleUrls: ['./edit-modal.component.css']
 })
 export class EditModalComponent implements OnChanges {
-  // Canales de comunicación unidireccional (Data-down, Actions-up)
   @Input() song: Song | null = null;
   @Input() isClosing = false;
   
   @Output() close = new EventEmitter<void>();
-  @Output() save = new EventEmitter<Song>();
+  @Output() save = new EventEmitter<any>();
+  @Output() delete = new EventEmitter<number>();
 
-  editedSong: Partial<Song> = {};
+  // INTERSECCIÓN DE TIPOS: Permite las propiedades de Song + la ruta física temporal del cover
+  editedSong: Partial<Song> & { newCoverPhysicalPath?: string } = {};
+  showDeleteConfirm = false;
+  rescanState: 'idle' | 'loading' | 'success' = 'idle';
+  Math = Math; 
+
+  constructor(private cancionesService: CancionesService) {}
 
   ngOnChanges(changes: SimpleChanges): void {
-    // Cada vez que el padre nos pase una nueva canción, rompemos la referencia de memoria clonándola
     if (changes['song'] && this.song) {
-      this.editedSong = { 
-        ...this.song,
-        composer: this.song.composer || 'Desconocido',
-        lyrics: this.song.lyrics || 'Cargando letras desde la base de datos...\n[Verso 1]\n...'
-      };
+      this.showDeleteConfirm = false;
+      this.rescanState = 'idle';
+      this.editedSong = JSON.parse(JSON.stringify(this.song));
     }
   }
 
-  resetChanges() {
-    if (this.song) {
-      this.editedSong = { ...this.song };
+  async changeCoverArt() {
+    const result = await this.cancionesService.selectCustomCover();
+    if (result) {
+      this.editedSong.coverUrl = result.base64;
+      this.editedSong.newCoverPhysicalPath = result.physicalPath;
+    }
+  }
+
+  searchHighResCover() {
+    alert("🤖 Módulo de búsqueda automática de carátulas HQ listo para ser implementado.");
+  }
+
+  async startRescanProcess() {
+    if (!this.editedSong.id) return;
+    this.rescanState = 'loading';
+    setTimeout(async () => {
+      const success = await this.cancionesService.rollbackToOfficial(this.editedSong.id!);
+      if (success && this.editedSong.filePath) {
+        // CORREGIDO: Usamos estricta y únicamente filePath según nuestro contrato
+        const cleanTitle = this.editedSong.filePath.split(/[/\\]/).pop()?.replace(/\.[^/.]+$/, '').replace(/^\d+\s*-\s*/, '') || this.editedSong.title;
+        this.editedSong.title = cleanTitle;
+      }
+      this.rescanState = 'success';
+    }, 1800);
+  }
+
+  acceptRescan() { this.rescanState = 'idle'; }
+  requestDelete() { this.showDeleteConfirm = true; }
+
+  async executePhysicalDelete() {
+    if (this.editedSong?.id) {
+      const deleted = await this.cancionesService.deletePhysicalSong(this.editedSong.id);
+      if (deleted) {
+        this.delete.emit(this.editedSong.id);
+        this.cancel();
+      }
     }
   }
 
   confirmSave() {
     if (this.song && this.editedSong) {
-      // Emitimos el objeto modificado hacia el componente padre
-      this.save.emit(this.editedSong as Song);
+      this.cancionesService.updateSongMetadata(this.editedSong).then(() => {
+        this.save.emit(this.editedSong);
+        this.cancel();
+      });
     }
   }
 
-  cancel() {
-    this.close.emit();
-  }
+  cancel() { this.close.emit(); }
 }

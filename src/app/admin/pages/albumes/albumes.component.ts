@@ -151,25 +151,25 @@ export class AlbumesComponent implements OnInit {
           title: official.title,
           artist: album.artist,
           album: album.title,
-          duration: official.duration,
+          duration: official.duration || '0:00',
           format: found ? found.format : '—',
-          coverUrl: found ? found.coverUrl : album.coverUrl,
-          isLocal: !!found,
+          coverUrl: found ? (found.coverUrl || album.coverUrl || '') : (album.coverUrl || ''),
+          isLocal: !found,
           localSongData: found
         };
       }).sort((a, b) => a.trackNumber - b.trackNumber);
 
       this.selectedAlbum = { info: album, tracks: reconciled };
     } else {
-      // Si no tenemos catálogo oficial en memoria, mostramos las pistas locales exactas
+      // Si no tenemos catálogo oficial en memoria, mostramos las pistas locales exactas blindadas
       const localOnly: TrackDisplay[] = localTracks.map((s, idx) => ({
-        trackNumber: s.track || idx + 1,
-        title: s.title,
-        artist: s.artist,
-        album: s.album,
-        duration: s.duration,
-        format: s.format,
-        coverUrl: s.coverUrl,
+        trackNumber: s.trackNumber || s.track || idx + 1,
+        title: s.title || 'Desconocido',
+        artist: s.artist || 'Desconocido',
+        album: s.album || 'Desconocido',
+        duration: s.duration || '0:00',           // BLINDADO contra undefined
+        format: s.format || 'FLAC',
+        coverUrl: s.coverUrl || '',               // BLINDADO contra undefined
         isLocal: true,
         localSongData: s
       })).sort((a, b) => a.trackNumber - b.trackNumber);
@@ -185,10 +185,16 @@ export class AlbumesComponent implements OnInit {
     this.selectedAlbum = null;
   }
 
-  openSongEdit(song?: Song) {
-    if (song) this.songToEdit = song;
+  openSongEdit(item: any) {
+    // Si el ítem al que dimos clic tiene localSongData adentro (es un TrackDisplay), sacamos la canción real.
+    // Si no lo tiene (es decir, ya es la canción directa desde la tabla general), la usamos directo.
+    const realSong = item && item.localSongData ? item.localSongData : item;
+    
+    if (realSong) {
+      this.songToEdit = realSong;
+    }
   }
-
+  
   closeEditModal() {
     this.isClosingEditModal = true;
     setTimeout(() => { this.songToEdit = null; this.isClosingEditModal = false; }, 250);
