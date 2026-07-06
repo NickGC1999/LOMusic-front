@@ -66,14 +66,16 @@ export class EditModalComponent implements OnChanges {
   requestDelete() { this.showDeleteConfirm = true; }
 
   async executePhysicalDelete() {
-    if (this.editedSong?.id) {
-      const deleted = await this.cancionesService.deletePhysicalSong(this.editedSong.id);
-      if (deleted) {
-        this.delete.emit(this.editedSong.id);
-        this.cancel();
-      }
+  if (this.editedSong?.id) {
+    const deleted = await this.cancionesService.deletePhysicalSong(this.editedSong.id);
+    if (deleted) {
+      this.delete.emit(this.editedSong.id);
+      this.cancel();
+    } else {
+      console.error('❌ No se pudo eliminar la canción. Revisa la terminal de Electron (proceso main).');
     }
   }
+}
 
   confirmSave() {
     if (this.song && this.editedSong) {

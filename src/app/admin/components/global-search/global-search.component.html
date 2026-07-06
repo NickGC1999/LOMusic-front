@@ -1,0 +1,70 @@
+<div class="global-search-container" *ngIf="searchResults$ | async as results">
+
+  <div class="empty-search-state" *ngIf="results.totalResults === 0">
+    <mat-icon class="empty-icon">search_off</mat-icon>
+    <h3>No encontramos coincidencias para "{{ term }}"</h3>
+    <p>Intenta buscar por el nombre de otra pista, artista, álbum o directorio.</p>
+  </div>
+
+  <div class="search-sections-wrapper" *ngIf="results.totalResults > 0">
+    <ng-container *ngFor="let section of sectionOrder">
+
+      <div class="search-section-block" *ngIf="section === 'canciones' && results.canciones.length > 0">
+        <h2 class="section-title"><mat-icon>queue_music</mat-icon> Canciones encontradas</h2>
+        <div class="table-glass-container">
+          <app-song-table [songs]="results.canciones"></app-song-table>
+        </div>
+      </div>
+
+      <div class="search-section-block" *ngIf="section === 'artistas' && results.artistas.length > 0">
+        <h2 class="section-title"><mat-icon>mic</mat-icon> Artistas</h2>
+        <div class="cards-grid circle-grid">
+          <div class="artist-card" *ngFor="let art of results.artistas">
+            <div class="avatar-box">
+              <img [src]="art.cover" alt="Artist cover" onerror="this.src='assets/default-cover.png'">
+            </div>
+            <h4>{{ art.name }}</h4>
+            <span>{{ art.count }} pistas en disco</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="search-section-block" *ngIf="section === 'albumes' && results.albumes.length > 0">
+        <h2 class="section-title"><mat-icon>album</mat-icon> Álbumes</h2>
+        <div class="cards-grid square-grid">
+          <div class="album-card glass-card" *ngFor="let alb of results.albumes">
+            <div class="cover-box">
+              <img [src]="alb.cover" alt="Album cover" onerror="this.src='assets/default-cover.png'">
+            </div>
+            <h4>{{ alb.title }}</h4>
+            <span class="sub-artist">{{ alb.artist }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="search-section-block" *ngIf="section === 'generos' && results.generos.length > 0">
+        <h2 class="section-title"><mat-icon>category</mat-icon> Géneros</h2>
+        <div class="cards-grid genre-grid">
+          <div class="genre-pill glass-card" *ngFor="let gen of results.generos">
+            <mat-icon>tune</mat-icon>
+            <div class="genre-info">
+              <h4>{{ gen.name }}</h4>
+              <span>{{ gen.count }} pistas</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="search-section-block" *ngIf="section === 'carpetas' && results.carpetas.length > 0">
+        <h2 class="section-title"><mat-icon>folder</mat-icon> Carpetas</h2>
+        <div class="folders-grid">
+          <div class="folder-card glass-card" *ngFor="let fol of results.carpetas">
+            <mat-icon class="folder-icon">folder</mat-icon>
+            <span>{{ fol.name }}</span>
+          </div>
+        </div>
+      </div>
+
+    </ng-container>
+  </div>
+</div>

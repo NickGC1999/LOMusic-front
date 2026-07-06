@@ -18,6 +18,11 @@ async function initDatabase() {
 
   // 2. Creación del esquema relacional completo (Grado de Estudio)
   db.run(`
+    CREATE TABLE IF NOT EXISTS app_settings (
+      key TEXT PRIMARY KEY,
+      value TEXT
+    );
+    
     CREATE TABLE IF NOT EXISTS artists (
       id INTEGER PRIMARY KEY AUTOINCREMENT, 
       name TEXT UNIQUE

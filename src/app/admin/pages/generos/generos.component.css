@@ -1,3 +1,15 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0%;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+
 /* --- CABECERA Y BUSCADOR --- */
 .top-header { display: flex; flex-direction: column; gap: 15px; width: 100%; margin-bottom: 10px;}
 .search-box { display: flex; align-items: center; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 50px; padding: 5px 8px 5px 25px; transition: all 0.3s; }
@@ -17,8 +29,23 @@
 .sort-icon { font-size: 18px !important; width: 18px !important; height: 18px !important; }
 
 /* --- CONTENEDOR PRINCIPAL --- */
-.list-override { padding: 0; justify-content: flex-start; align-items: stretch; overflow: hidden; display: flex; flex-direction: column; }
-.explorer-content { flex-grow: 1; overflow-y: auto; }
+.list-override {
+  padding: 0;
+  justify-content: flex-start;
+  align-items: stretch;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.explorer-content {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 25px 35px;
+  min-height: 0;
+}
 
 /* --- NUEVO: BARRA DE RETROCESO --- */
 .back-action-bar {

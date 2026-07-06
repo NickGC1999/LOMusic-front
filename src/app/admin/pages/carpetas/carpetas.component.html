@@ -1,115 +1,176 @@
 <header class="top-header">
-  <div class="search-box">
-    <input type="text" placeholder="Busca en tus directorios...">
-    <div class="search-divider"></div>
-    <button class="search-btn-icon"><mat-icon>search</mat-icon></button>
-  </div>
 
   <div class="filters-container">
-    <span class="filter-label">Reestructurar carpetas por:</span>
-    <div class="chip-split" [class.active]="groupingBy === 'artist'" (click)="requestGroupChange('artist')">
-      <div class="chip-text">Artista</div>
-    </div>
-    <div class="chip-split" [class.active]="groupingBy === 'year'" (click)="requestGroupChange('year')">
-      <div class="chip-text">Año</div>
-    </div>
-    <div class="chip-split" [class.active]="groupingBy === 'genre'" (click)="requestGroupChange('genre')">
-      <div class="chip-text">Género</div>
-    </div>
-    <div class="chip-split" [class.active]="groupingBy === 'format'" (click)="requestGroupChange('format')">
-      <div class="chip-text">Calidad</div>
-    </div>
+  <span class="filter-label">Reestructurar carpetas por:</span>
+  <div class="chip-split" (click)="requestRestructure('artist')">
+    <div class="chip-text">Artista</div>
   </div>
+  <div class="chip-split" (click)="requestRestructure('year')">
+    <div class="chip-text">Año</div>
+  </div>
+  <div class="chip-split" (click)="requestRestructure('genre')">
+    <div class="chip-text">Género</div>
+  </div>
+  <div class="chip-split" (click)="requestRestructure('format')">
+    <div class="chip-text">Calidad</div>
+  </div>
+  <div class="filter-divider"></div>
+  <div class="chip-split" (click)="runCleanupOrphanFolders()">
+  <div class="chip-text">Limpiar carpetas vacías</div>
+</div>
+</div>
+
 </header>
 
 <div class="table-glass-container list-override">
-  
+
   <div class="explorer-path-bar">
-    <mat-icon class="home-icon">computer</mat-icon>
+    <mat-icon class="home-icon" (click)="goToBreadcrumb(-1)">computer</mat-icon>
     <mat-icon class="crumb-separator">chevron_right</mat-icon>
-    
-    <ng-container *ngFor="let node of currentPath; let i = index; let isLast = last">
+
+    <ng-container *ngFor="let node of pathStack; let i = index; let isLast = last">
       <span class="crumb" [class.active]="isLast" (click)="goToBreadcrumb(i)">
-        {{ node.label }}
+        {{ node.name }}
       </span>
       <mat-icon class="crumb-separator" *ngIf="!isLast">chevron_right</mat-icon>
     </ng-container>
   </div>
 
-  <div class="loading-overlay" *ngIf="isLoading">
-    <div class="giant-l-wave">
-      <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
-    </div>
-    <h3>Reestructurando Sistema de Archivos...</h3>
-    <p>Moviendo pistas físicamente en el disco.</p>
-  </div>
+  <div class="explorer-content">
 
-  <div class="explorer-content" *ngIf="!isLoading">
-    
-    <div class="folders-grid" *ngIf="viewMode === 'folders'">
-      <div class="win-folder" *ngFor="let folder of foldersToDisplay" (click)="openFolder(folder)">
-        
-        <div class="win-icon-wrapper" *ngIf="!folder.coverUrl">
+    <div class="folders-grid" *ngIf="currentChildren.length">
+      <div class="win-folder"
+           *ngFor="let folder of currentChildren"
+           (click)="openFolder(folder)"
+           (contextmenu)="onFolderRightClick($event, folder)">
+        <div class="win-icon-wrapper">
           <mat-icon>folder</mat-icon>
         </div>
-
-        <div class="win-cover-wrapper" *ngIf="folder.coverUrl">
-          <img [src]="folder.coverUrl" alt="Album">
-        </div>
-
         <div class="win-folder-info">
           <span class="win-name">{{ folder.name }}</span>
-          <span class="win-count">{{ folder.count }} item(s)</span>
+          <span class="win-count">{{ folder.children.length + folder.songs.length }} item(s)</span>
         </div>
       </div>
     </div>
 
-    <div class="song-table" *ngIf="viewMode === 'songs'">
-      <div class="song-header">
-        <div class="col-index">#</div>
-        <div class="col-cover">COVER</div>
-        <div class="col-title">TITLE</div>
-        <div class="col-artist">ARTIST</div>
-        <div class="col-album">ALBUM</div>
-        <div class="col-time">TIME</div>
-        <div class="col-format">FORMAT</div>
-      </div>
+    <app-song-table
+      *ngIf="currentSongs.length"
+      [songs]="currentSongs"
+      (rowClick)="openEditModal($event)">
+    </app-song-table>
 
-      <div class="song-row" *ngFor="let song of songsToDisplay; let i = index" (click)="openEditModal(song)">
-        <div class="col-index">{{ i + 1 }}</div>
-        <div class="col-cover"><img [src]="song.coverUrl" alt="cover"></div>
-        <div class="col-title">{{ song.title }}</div>
-        <div class="col-artist">{{ song.artist }}</div>
-        <div class="col-album">{{ song.album }}</div>
-        <div class="col-time">{{ song.duration }}</div>
-        <div class="col-format">{{ song.format }}</div>
-      </div>
-      
+    <div class="empty-content" *ngIf="!currentChildren.length && !currentSongs.length">
+      <p>Esta carpeta está vacía.</p>
     </div>
 
   </div>
 </div>
 
-<div class="modal-overlay" *ngIf="isConfirmModalOpen" [class.closing]="isModalClosing" (click)="cancelGroupChange()">
+<!-- MENÚ CONTEXTUAL FLOTANTE -->
+<div class="context-menu"
+     *ngIf="contextMenuVisible"
+     [style.left.px]="contextMenuX"
+     [style.top.px]="contextMenuY"
+     (click)="$event.stopPropagation()">
+  <button class="context-item" (click)="requestRename()">
+    <mat-icon>edit</mat-icon> Cambiar nombre
+  </button>
+  <button class="context-item" (click)="requestRescan()">
+    <mat-icon>sync</mat-icon> Volver a escanear
+  </button>
+  <div class="context-divider"></div>
+  <button class="context-item danger" (click)="requestDeleteFolder()">
+    <mat-icon>delete_outline</mat-icon> Eliminar
+  </button>
+</div>
+
+<!-- MODAL: RENOMBRAR -->
+<div class="modal-overlay" *ngIf="isRenameModalOpen" [class.closing]="isRenameModalClosing" (click)="cancelRename()">
+  <div class="glass-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Cambiar Nombre de Carpeta</h2>
+      <button class="close-btn" (click)="cancelRename()"><mat-icon>close</mat-icon></button>
+    </div>
+    <div class="modal-body">
+      <input type="text" class="lov-input" [(ngModel)]="renameValue" (keydown.enter)="confirmRename()">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" (click)="cancelRename()">Cancelar</button>
+      <button class="btn-primary-action" (click)="confirmRename()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: CONFIRMAR ELIMINAR CARPETA -->
+<div class="modal-overlay" *ngIf="isDeleteFolderModalOpen" [class.closing]="isDeleteFolderModalClosing" (click)="cancelDeleteFolder()">
+  <div class="glass-modal warning-modal" (click)="$event.stopPropagation()">
+    <mat-icon class="warn-icon">delete_forever</mat-icon>
+    <h2>¿Eliminar esta carpeta permanentemente?</h2>
+    <p>Se borrará la carpeta y todo su contenido de tu disco local. Esta acción no se puede deshacer.</p>
+    <div class="modal-actions">
+      <button class="btn-cancel" (click)="cancelDeleteFolder()">Cancelar</button>
+      <button class="btn-danger" (click)="confirmDeleteFolder()">Sí, eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- OVERLAY DE PROCESAMIENTO -->
+<div class="modal-overlay scanning-overlay" *ngIf="isProcessingFolderAction">
+  <div class="scanning-content-box">
+    <div class="giant-l-wave">
+      <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+    </div>
+    <h3>{{ folderActionMessage }}</h3>
+  </div>
+</div>
+
+<!-- MODAL: ERROR DE OPERACIÓN -->
+<div class="modal-overlay" *ngIf="folderActionError" (click)="dismissFolderActionError()">
+  <div class="glass-modal warning-modal" (click)="$event.stopPropagation()">
+    <mat-icon class="warn-icon">error_outline</mat-icon>
+    <h2>No se pudo completar la operación</h2>
+    <p>{{ folderActionError }}</p>
+    <div class="modal-actions">
+      <button class="btn-primary-action" (click)="dismissFolderActionError()">Entendido</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: CONFIRMAR REESTRUCTURACIÓN MASIVA -->
+<div class="modal-overlay" *ngIf="isRestructureConfirmOpen" [class.closing]="isRestructureConfirmClosing" (click)="cancelRestructure()">
   <div class="glass-modal warning-modal" (click)="$event.stopPropagation()">
     <div class="warning-icon-bg">
       <mat-icon>warning_amber</mat-icon>
     </div>
     <h2>Modificación del Directorio Raíz</h2>
     <p>
-      Estás a punto de reestructurar físicamente tus archivos locales por <strong>{{ pendingGroupSelection | uppercase }}</strong>. 
-      LOMusic moverá las pistas de audio a nuevas carpetas en tu disco duro.
+      Estás a punto de reestructurar físicamente tus archivos locales por <strong>{{ pendingRestructureMode | uppercase }}</strong>.
+      LOMusic moverá las pistas de audio a nuevas carpetas en tu disco duro. Esta acción no se puede deshacer.
     </p>
     <div class="modal-actions">
-      <button class="btn-cancel" (click)="cancelGroupChange()">Cancelar</button>
-      <button class="btn-danger" (click)="confirmGroupChange()">Proceder</button>
+      <button class="btn-cancel" (click)="cancelRestructure()">Cancelar</button>
+      <button class="btn-danger" (click)="confirmRestructure()">Proceder</button>
     </div>
   </div>
 </div>
 
-<app-edit-modal 
-  [song]="selectedSong" 
-  [isClosing]="isClosingEditModal" 
-  (close)="closeEditModal()" 
-  (save)="saveChanges($event)">
+<!-- MODAL: RESULTADO DE REESTRUCTURACIÓN -->
+<div class="modal-overlay" *ngIf="restructureResultMessage" (click)="dismissRestructureResult()">
+  <div class="glass-modal warning-modal" (click)="$event.stopPropagation()">
+    <mat-icon class="warn-icon">check_circle_outline</mat-icon>
+    <h2>Reestructuración Completada</h2>
+    <p>{{ restructureResultMessage }}</p>
+    <div class="modal-actions">
+      <button class="btn-primary-action" (click)="dismissRestructureResult()">Entendido</button>
+    </div>
+  </div>
+</div>
+
+<app-edit-modal
+  *ngIf="selectedSong"
+  [song]="selectedSong"
+  [isClosing]="isClosingEditModal"
+  (close)="closeEditModal()"
+  (save)="onSongSaved($event)"
+  (delete)="onSongDeleted($event)">
 </app-edit-modal>

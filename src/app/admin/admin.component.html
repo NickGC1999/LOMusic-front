@@ -63,8 +63,30 @@
   </aside>
 
   <main class="main-content">
-    <router-outlet></router-outlet>
-  </main>
+  
+  <div class="discrete-search-header">
+    <div class="search-box">
+      <input 
+        type="text" 
+        [placeholder]="dynamicPlaceholder"
+        (input)="onGlobalSearchInput($event)">
+      <div class="search-divider"></div>
+      <button class="search-btn-icon"><mat-icon>search</mat-icon></button>
+    </div>
+  </div>
+
+  <div class="content-viewport">
+    @if (!activeSearchTerm) {
+      <router-outlet></router-outlet>
+    } @else {
+      <app-global-search 
+        [term]="activeSearchTerm" 
+        [currentContext]="currentRouteContext">
+      </app-global-search>
+    }
+  </div>
+
+</main>
 
 </div>
 

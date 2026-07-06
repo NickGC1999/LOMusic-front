@@ -1,0 +1,27 @@
+<div class="song-table">
+  <div class="song-header">
+    <div class="col-index">#</div>
+    <div class="col-cover">COVER</div>
+    <div class="col-title">TITLE</div>
+    <div class="col-artist">ARTIST</div>
+    <div class="col-album">ALBUM</div>
+    <div class="col-time">TIME</div>
+    <div class="col-format">FORMAT</div>
+  </div>
+
+  <div class="song-row" *ngFor="let song of songs; let i = index" (click)="onRowClick(song)">
+    <div class="col-index">{{ i + 1 }}</div>
+    <div class="col-cover">
+      <img [src]="song.coverUrl" [alt]="song.album" loading="lazy">
+    </div>
+    <div class="col-title">{{ song.title }}</div>
+    <div class="col-artist">{{ song.artist }}</div>
+    <div class="col-album">{{ song.album }}</div>
+    <div class="col-time">{{ song.duration }}</div>
+    <div class="col-format">{{ song.format }}</div>
+  </div>
+
+  <div class="loading-state" *ngIf="!songs">
+    Cargando biblioteca de alta fidelidad...
+  </div>
+</div>

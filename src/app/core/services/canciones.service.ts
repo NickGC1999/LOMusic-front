@@ -3,6 +3,7 @@ import { Observable, from, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { ElectronService } from './electron.service';
 import { Song } from '../models/song.model';
+import { FolderNode } from '../models/folder-node.model';
 
 @Injectable({
   providedIn: 'root'
@@ -58,6 +59,78 @@ export class CancionesService {
     return of([]);
   }
 
+  getFolderTree(): Observable<FolderNode[]> {
+  if (this.electronService.isElectron) {
+    return from(this.electronService.invoke<FolderNode[]>('get-folder-tree')).pipe(
+      catchError(err => {
+        console.error('❌ [CancionesService] Error al obtener árbol de carpetas:', err);
+        return of([]);
+      })
+    );
+  }
+  return of([]);
+}
+
+  getIncompleteSongs(): Observable<Song[]> {
+  if (this.electronService.isElectron) {
+    return from(this.electronService.invoke<Song[]>('get-incomplete-songs')).pipe(
+      map(rawSongs => rawSongs.map(row => ({
+        ...row,
+        title: row.title || 'Sin Título',
+        artist: row.artist || 'Artista Desconocido',
+        album: row.album || 'Álbum Desconocido',
+        duration: row.duration || this.formatDurationFromMs(row.durationMs ?? 0),
+        coverUrl: row.coverUrl || 'assets/default-cover.png'
+      }))),
+      catchError(err => {
+        console.error('❌ [CancionesService] Error al consultar incompletos:', err);
+        return of([]);
+      })
+    );
+  }
+  return of([]);
+}
+
+getDuplicateSongs(): Observable<Song[]> {
+  if (this.electronService.isElectron) {
+    return from(this.electronService.invoke<Song[]>('get-duplicate-songs')).pipe(
+      map(rawSongs => rawSongs.map(row => ({
+        ...row,
+        title: row.title || 'Sin Título',
+        artist: row.artist || 'Artista Desconocido',
+        album: row.album || 'Álbum Desconocido',
+        duration: row.duration || this.formatDurationFromMs(row.durationMs ?? 0),
+        coverUrl: row.coverUrl || 'assets/default-cover.png'
+      }))),
+      catchError(err => {
+        console.error('❌ [CancionesService] Error al consultar duplicados:', err);
+        return of([]);
+      })
+    );
+  }
+  return of([]);
+}
+
+getModifiedSongs(): Observable<Song[]> {
+  if (this.electronService.isElectron) {
+    return from(this.electronService.invoke<Song[]>('get-modified-songs')).pipe(
+      map(rawSongs => rawSongs.map(row => ({
+        ...row,
+        title: row.title || 'Sin Título',
+        artist: row.artist || 'Artista Desconocido',
+        album: row.album || 'Álbum Desconocido',
+        duration: row.duration || this.formatDurationFromMs(row.durationMs ?? 0),
+        coverUrl: row.coverUrl || 'assets/default-cover.png'
+      }))),
+      catchError(err => {
+        console.error('❌ [CancionesService] Error al consultar modificados:', err);
+        return of([]);
+      })
+    );
+  }
+  return of([]);
+}
+
   /**
    * Convierte milisegundos a MM:SS
    */
@@ -108,9 +181,51 @@ export class CancionesService {
     return false;
   }
 
-  /**
-   * Eliminar físicamente una canción.
-   */
+  async cleanupOrphanFolders(): Promise<{ success: boolean; cleanedFolders?: number; leftoverFilesMoved?: number; skippedFolders?: string[]; error?: string }> {
+  if (this.electronService.isElectron) {
+    return await this.electronService.invoke('cleanup-orphan-folders');
+  }
+  return { success: false, error: 'No disponible en modo web' };
+}
+
+ async restructureLibrary(mode: 'artist' | 'year' | 'genre' | 'format'): Promise<{
+  success: boolean;
+  moved?: number;
+  failed?: number;
+  failures?: any[];
+  cleanedFolders?: number;
+  leftoverFilesMoved?: number;
+  skippedFolders?: string[];
+  error?: string;
+}> {
+  if (this.electronService.isElectron) {
+    return await this.electronService.invoke('restructure-library', mode);
+  }
+  return { success: false, error: 'No disponible en modo web' };
+}
+
+  async renamePhysicalFolder(relativePath: string, newName: string): Promise<{ success: boolean; error?: string }> {
+  if (this.electronService.isElectron) {
+    return await this.electronService.invoke('rename-physical-folder', { relativePath, newName });
+  }
+  return { success: false, error: 'No disponible en modo web' };
+}
+
+async deletePhysicalFolder(relativePath: string): Promise<{ success: boolean; error?: string }> {
+  if (this.electronService.isElectron) {
+    return await this.electronService.invoke('delete-physical-folder', { relativePath });
+  }
+  return { success: false, error: 'No disponible en modo web' };
+}
+
+async rescanSpecificFolder(relativePath: string): Promise<{ success: boolean; error?: string }> {
+  if (this.electronService.isElectron) {
+    return await this.electronService.invoke('rescan-specific-folder', { relativePath });
+  }
+  return { success: false, error: 'No disponible en modo web' };
+}
+
+
   async deletePhysicalSong(songId: number): Promise<boolean> {
     if (this.electronService.isElectron) {
       const res = await this.electronService.invoke<any>('delete-song', songId);

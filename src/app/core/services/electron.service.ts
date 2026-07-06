@@ -6,6 +6,12 @@ import { Injectable } from '@angular/core';
 export class ElectronService {
   private ipcRenderer: any;
 
+  onAutotagProgress(callback: (progress: any) => void): void {
+  if (this.isElectron && this.ipcRenderer) {
+    this.ipcRenderer.on('autotag-progress', (_event: any, progress: any) => callback(progress));
+  }
+}
+
   constructor() {
     // Verificamos de forma segura si estamos ejecutándonos dentro de Electron
     if (this.isElectron) {

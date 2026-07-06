@@ -1,9 +1,4 @@
 <header class="top-header">
-  <div class="search-box">
-    <input type="text" placeholder="Escribe la canción, artista o álbum que buscas...">
-    <div class="search-divider"></div>
-    <button class="search-btn-icon"><mat-icon>search</mat-icon></button>
-  </div>
 
   <div class="filters-container">
     <span class="filter-label">Ordenar por:</span>
@@ -65,39 +60,10 @@
      2. DATA GRID: LISTADO DE CANCIONES
 =========================================== -->
 <div class="table-glass-container list-override">
-  
-  <div class="song-table">
-    <!-- Encabezado de la tabla -->
-    <div class="song-header">
-      <div class="col-index">#</div>
-      <div class="col-cover">COVER</div>
-      <div class="col-title">TITLE</div>
-      <div class="col-artist">ARTIST</div>
-      <div class="col-album">ALBUM</div>
-      <div class="col-time">TIME</div>
-      <div class="col-format">FORMAT</div>
-    </div>
-
-    <!-- Iteración Reactiva de Canciones -->
-    <div class="song-row" *ngFor="let song of canciones$ | async; let i = index" (click)="openEditModal(song)">
-      <div class="col-index">{{ i + 1 }}</div>
-      
-      <div class="col-cover">
-        <img [src]="song.coverUrl" [alt]="song.album" loading="lazy">
-      </div>
-      
-      <div class="col-title">{{ song.title }}</div>
-      <div class="col-artist">{{ song.artist }}</div>
-      <div class="col-album">{{ song.album }}</div>
-      <div class="col-time">{{ song.duration }}</div>
-      <div class="col-format">{{ song.format }}</div>
-    </div>
-
-    <!-- Feedback de carga simulada -->
-    <div class="loading-state" *ngIf="!(canciones$ | async)">
-      Cargando biblioteca de alta fidelidad...
-    </div>
-  </div>
+  <app-song-table
+    [songs]="canciones$ | async"
+    (rowClick)="openEditModal($event)">
+  </app-song-table>
 </div>
 
 <app-edit-modal

@@ -1,36 +1,53 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
+import { CancionesService } from '../../../core/services/canciones.service';
+import { Observable, BehaviorSubject, switchMap } from 'rxjs';
+import { Song } from '../../../core/models/song.model';
+import { EditModalComponent } from '../../components/edit-modal/edit-modal.component';
+import { SongTableComponent } from '../../components/song-table/song-table.component';
 
 @Component({
   selector: 'app-incompletos',
   standalone: true,
-  imports: [CommonModule, MatIconModule],
+  imports: [CommonModule, MatIconModule, EditModalComponent, SongTableComponent],
   templateUrl: './incompletos.component.html',
   styleUrls: ['./incompletos.component.css']
 })
-export class IncompletosComponent {
-  // Lógica visual para mantener la interfaz funcional
-  activeSort: string | null = null;
-  sortDirection: 'asc' | 'desc' = 'desc'; 
-  isFormatExpanded = false;
-  activeFormat: string | null = null;
+export class IncompletosComponent implements OnInit {
+  songs$!: Observable<Song[]>;
+  selectedSong: Song | null = null;
+  isClosingModal = false;
 
-  toggleSort(column: string) {
-    if (this.activeSort === column) {
-      this.activeSort = null;
-    } else {
-      this.activeSort = column;
-      this.sortDirection = 'desc';
-    }
+  private refresh$ = new BehaviorSubject<void>(undefined);
+
+  constructor(private cancionesService: CancionesService) {}
+
+  ngOnInit(): void {
+    this.songs$ = this.refresh$.pipe(
+      switchMap(() => this.cancionesService.getIncompleteSongs())
+    );
   }
 
-  changeDirection(event: Event) {
-    event.stopPropagation(); 
-    this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+  openEditModal(song: Song) {
+    this.selectedSong = song;
   }
 
-  selectFormat(format: string) {
-    this.activeFormat = this.activeFormat === format ? null : format;
+  closeEditModal() {
+    this.isClosingModal = true;
+    setTimeout(() => {
+      this.selectedSong = null;
+      this.isClosingModal = false;
+    }, 250);
+  }
+
+  onSongSaved(_: any) {
+    this.closeEditModal();
+    this.refresh$.next(); // Reconsulta: si ya no está incompleta, desaparece sola de esta lista
+  }
+
+  onSongDeleted(_: number) {
+    this.closeEditModal();
+    this.refresh$.next();
   }
 }

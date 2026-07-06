@@ -5,13 +5,14 @@ import { FormsModule } from '@angular/forms';
 import { CancionesService } from '../../../core/services/canciones.service';
 import { Observable, BehaviorSubject, combineLatest, map, switchMap } from 'rxjs';
 import { EditModalComponent } from '../../components/edit-modal/edit-modal.component';
+import { SongTableComponent } from '../../components/song-table/song-table.component';
 
 @Component({
   selector: 'app-canciones',
   standalone: true,
-  imports: [CommonModule, MatIconModule, FormsModule, EditModalComponent],
+  imports: [CommonModule, MatIconModule, FormsModule, EditModalComponent, SongTableComponent],
   templateUrl: './canciones.component.html',
-  styleUrls: ['./canciones.component.css']
+  styleUrls: ['./canciones.component.css'],
 })
 export class CancionesComponent implements OnInit {
   canciones$!: Observable<any[]>;
@@ -70,6 +71,8 @@ export class CancionesComponent implements OnInit {
       })
     );
   }
+
+  
 
   // MÉTODOS DE ACCIÓN (DISPARAN EL REFRESCO REAL EN PANTALLA)
   onSongSaved(updatedSong: any) {

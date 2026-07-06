@@ -3,6 +3,12 @@ const path = require('path');
 const fs = require('fs');
 const { initDatabase, getDb, saveDatabase } = require('./database');
 const { scanDirectory } = require('./scanner');
+const { writeTagsToFile } = require('./tag-writer');
+const { renamePhysicalFolder, deletePhysicalFolder } = require('./folder-engine');
+const { buildRestructurePlan, executeRestructurePlan, cleanupEmptyFolders } = require('./restructure-engine');
+const { getFingerprint } = require('./acoustic-fingerprint');
+const { lookupAcoustID, getRecordingMetadata, getCoverArtUrl } = require('./musicbrainz-client');
+const { runAutotagBatch } = require('./autotagger');
 
 let mainWindow;
 
@@ -77,12 +83,31 @@ ipcMain.handle('clean-database', () => {
 // CANALES IPC DE AUDITORÍA Y NAVEGACIÓN
 // =========================================================================
 
+function saveRootFolderPath(folderPath) {
+  const db = getDb();
+  if (!db) return;
+  try {
+    db.prepare('INSERT OR REPLACE INTO app_settings (key, value) VALUES (?, ?)').run(['root_folder_path', folderPath]);
+    saveDatabase();
+  } catch (e) {
+    console.error('❌ Error al guardar la ruta raíz de la biblioteca:', e.message);
+  }
+}
+
+function getRootFolderPath() {
+  const row = execToObjects("SELECT value FROM app_settings WHERE key = 'root_folder_path'")[0];
+  return row && row.value ? row.value : null;
+}
+
+
 ipcMain.handle('scan-folder', async (event, folderPath) => {
   console.log(`🚀 Iniciando auditoría profunda en: ${folderPath}`);
   wipeDatabase(); // Limpieza absoluta garantizada antes de escanear
   await scanDirectory(folderPath);
+  saveRootFolderPath(folderPath);
   return { success: true, message: "Escaneo completado" };
 });
+
 
 ipcMain.handle('open-folder-dialog', async () => {
   const musicPath = app.getPath('music'); 
@@ -107,9 +132,12 @@ ipcMain.handle('get-albums', () => {
   return execToObjects(query);
 });
 
-
-// Canal Optimizado con Adaptador Puente para que todas las tablas HTML visualicen la duración "3:45"
-ipcMain.handle('get-songs', () => {
+// =========================================================================
+// FUNCIÓN COMPARTIDA: misma query + mismo mapeo camelCase para
+// "Todas las canciones", "Modificados" e "Incompletos".
+// Acepta una cláusula WHERE opcional (ej: 'WHERE s.is_modified = 1')
+// =========================================================================
+function queryAndMapSongs(whereClause = '') {
   const query = `
     SELECT s.*, 
            a.title as album, 
@@ -121,6 +149,7 @@ ipcMain.handle('get-songs', () => {
     JOIN albums a ON s.album_id = a.id
     JOIN artists art ON a.primary_artist_id = art.id
     LEFT JOIN genres g ON s.genre_id = g.id
+    ${whereClause}
     ORDER BY s.title ASC
   `;
   const songs = execToObjects(query);
@@ -180,15 +209,57 @@ ipcMain.handle('get-songs', () => {
     isIncomplete: song.is_incomplete
     };
   });
+}
+
+// =========================================================================
+// DETECCIÓN DE DUPLICADOS: agrupa por título normalizado + artista + duración
+// =========================================================================
+function getDuplicateSongs() {
+  const dupKeys = execToObjects(`
+    SELECT LOWER(TRIM(s.title)) as norm_title, 
+           art.name as artist, 
+           s.duration_ms as duration_ms, 
+           COUNT(*) as cnt
+    FROM songs s
+    JOIN albums a ON s.album_id = a.id
+    JOIN artists art ON a.primary_artist_id = art.id
+    GROUP BY norm_title, artist, duration_ms
+    HAVING cnt > 1
+  `);
+
+  if (dupKeys.length === 0) return [];
+
+  const allSongs = queryAndMapSongs();
+  return allSongs.filter(song => {
+    const normTitle = (song.title || '').toLowerCase().trim();
+    return dupKeys.some(k => 
+      k.norm_title === normTitle && 
+      k.artist === song.artist && 
+      k.duration_ms === song.durationMs
+    );
+  });
+}
+
+// Canal Optimizado con Adaptador Puente para que todas las tablas HTML visualicen la duración "3:45"
+ipcMain.handle('get-songs', () => {
+  return queryAndMapSongs();
 });
 
 ipcMain.handle('get-folder-tree', () => {
-  const songs = execToObjects('SELECT id, title, file_path, format FROM songs ORDER BY file_path ASC');
-  const root = { name: 'Raíz del Sistema', path: '', children: {}, songs: [] };
+  const rootFolderPath = getRootFolderPath();
+  const songs = queryAndMapSongs(); // ← CAMBIO 1: antes era execToObjects con solo 4 columnas
+  const root = { name: 'Raíz de tu Biblioteca', path: rootFolderPath || '', children: {}, songs: [] };
 
   songs.forEach(song => {
-    const dirPath = path.dirname(song.file_path);
-    const parts = dirPath.split(/[/\\]+/).filter(Boolean);
+    const dirPath = path.dirname(song.filePath); // ← CAMBIO 2: antes era song.file_path (snake_case)
+
+    let relativeDir = dirPath;
+    if (rootFolderPath) {
+      const rel = path.relative(rootFolderPath, dirPath);
+      relativeDir = (rel && !rel.startsWith('..')) ? rel : '';
+    }
+
+    const parts = relativeDir.split(/[/\\]+/).filter(Boolean);
     let currentNode = root;
 
     parts.forEach((part, idx) => {
@@ -285,12 +356,22 @@ ipcMain.handle('update-song', async (event, updatedData) => {
     ]);
 
     const songRow = execToObjects('SELECT file_path FROM songs WHERE id = ?', [updatedData.id])[0];
+
+    // Escritura real de tags en el archivo físico, antes de renombrar
+    if (songRow && fs.existsSync(songRow.file_path)) {
+      try {
+        writeTagsToFile(songRow.file_path, updatedData, updatedData.newCoverPhysicalPath || null);
+      } catch (tagErr) {
+        console.error('⚠️ No se pudieron escribir los tags físicos (se guardó igual en el catálogo):', tagErr.message);
+      }
+    }
+
     if (songRow && fs.existsSync(songRow.file_path)) {
       const dir = path.dirname(songRow.file_path);
       const ext = path.extname(songRow.file_path);
       const safeTitle = updatedData.title.replace(/[/\\?%*:|"<>]/g, '');
       const newFilePath = path.join(dir, `${safeTitle}${ext}`);
-      
+
       if (songRow.file_path !== newFilePath && !fs.existsSync(newFilePath)) {
         fs.renameSync(songRow.file_path, newFilePath);
         db.prepare('UPDATE songs SET file_path = ? WHERE id = ?').run([newFilePath, updatedData.id]);
@@ -319,6 +400,7 @@ ipcMain.handle('rollback-song-official', async (event, songId) => {
     saveDatabase(); 
     return { success: true, restoredTitle: cleanTitle };
   } catch (err) {
+    console.error('❌ Error al restaurar título original:', err.message);
     return { success: false };
   }
 }); 
@@ -335,22 +417,228 @@ ipcMain.handle('delete-song', async (event, songId) => {
       fs.unlinkSync(song.file_path);
     }
 
-    db.prepare('DELETE FROM song_artists WHERE song_id = ?').run([songId]);
     db.prepare('DELETE FROM songs WHERE id = ?').run([songId]);
 
     saveDatabase(); 
+    return { success: true };
+  } catch (err) {
+    console.error('❌ Error al eliminar archivo físico:', err.message);
+    return { success: false, error: err.message };
+  }
+});
+
+ipcMain.handle('get-modified-songs', () => {
+  return queryAndMapSongs('WHERE s.is_modified = 1');
+});
+
+ipcMain.handle('get-incomplete-songs', () => {
+  return queryAndMapSongs('WHERE s.is_incomplete = 1');
+});
+
+ipcMain.handle('get-duplicate-songs', () => {
+  return getDuplicateSongs();
+});
+
+ipcMain.handle('rename-physical-folder', async (event, { relativePath, newName }) => {
+  const rootFolderPath = getRootFolderPath();
+  if (!rootFolderPath || !relativePath) {
+    return { success: false, error: 'No hay una carpeta raíz configurada.' };
+  }
+  const safeName = newName.replace(/[/\\?%*:|"<>]/g, '').trim();
+  if (!safeName) {
+    return { success: false, error: 'Nombre inválido.' };
+  }
+  const absolutePath = path.join(rootFolderPath, relativePath);
+  const result = renamePhysicalFolder(absolutePath, safeName);
+  return result;
+});
+
+ipcMain.handle('delete-physical-folder', async (event, { relativePath }) => {
+  const rootFolderPath = getRootFolderPath();
+  if (!rootFolderPath || !relativePath) {
+    return { success: false, error: 'No hay una carpeta raíz configurada.' };
+  }
+  const absolutePath = path.join(rootFolderPath, relativePath);
+  const result = deletePhysicalFolder(absolutePath);
+  return result;
+});
+
+ipcMain.handle('rescan-specific-folder', async (event, { relativePath }) => {
+  const rootFolderPath = getRootFolderPath();
+  if (!rootFolderPath || !relativePath) {
+    return { success: false, error: 'No hay una carpeta raíz configurada.' };
+  }
+  const absolutePath = path.join(rootFolderPath, relativePath);
+  try {
+    await scanDirectory(absolutePath); // No hace wipeDatabase(): solo actualiza/inserta lo que encuentre en esa subcarpeta
     return { success: true };
   } catch (err) {
     return { success: false, error: err.message };
   }
 });
 
-ipcMain.handle('get-modified-songs', () => {
-  return execToObjects('SELECT * FROM songs WHERE is_modified = 1 ORDER BY title ASC');
+  ipcMain.handle('restructure-library', async (event, mode) => {
+  const rootFolderPath = getRootFolderPath();
+  if (!rootFolderPath) {
+    return { success: false, error: 'No hay una carpeta raíz configurada. Escanea una biblioteca primero.' };
+  }
+
+  try {
+    const songs = queryAndMapSongs();
+    const plan = buildRestructurePlan(songs, rootFolderPath, mode);
+    const results = executeRestructurePlan(plan);
+    const cleanup = cleanupEmptyFolders(rootFolderPath);
+
+    return {
+      success: true,
+      moved: results.moved,
+      failed: results.failed,
+      failures: results.failures,
+      cleanedFolders: cleanup.deletedFolders,
+      leftoverFilesMoved: cleanup.movedFiles,
+      skippedFolders: cleanup.skippedFolders
+    };
+  } catch (err) {
+    console.error('❌ Error durante la reestructuración de biblioteca:', err.message);
+    return { success: false, error: err.message };
+  }
 });
 
-ipcMain.handle('get-incomplete-songs', () => {
-  return execToObjects('SELECT * FROM songs WHERE is_incomplete = 1 ORDER BY title ASC');
+ipcMain.handle('cleanup-orphan-folders', async () => {
+  const rootFolderPath = getRootFolderPath();
+  if (!rootFolderPath) {
+    return { success: false, error: 'No hay una carpeta raíz configurada.' };
+  }
+  try {
+    const cleanup = cleanupEmptyFolders(rootFolderPath);
+    return {
+      success: true,
+      cleanedFolders: cleanup.deletedFolders,
+      leftoverFilesMoved: cleanup.movedFiles,
+      skippedFolders: cleanup.skippedFolders
+    };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+
+// CANAL DE PRUEBA TEMPORAL — solo para validar el Paso 1 antes de construir el orquestador
+ipcMain.handle('test-fingerprint', async (event, songId) => {
+  try {
+    const song = execToObjects('SELECT file_path FROM songs WHERE id = ?', [songId])[0];
+    if (!song) return { success: false, error: 'Canción no encontrada' };
+
+    const result = await getFingerprint(song.file_path);
+    console.log('✅ Fingerprint obtenido:', result.fingerprint.substring(0, 50) + '...', 'Duración:', result.durationSeconds);
+    return { success: true, ...result };
+  } catch (err) {
+    console.error('❌ Error de fingerprint:', err.message);
+    return { success: false, error: err.message };
+  }
+});
+
+// CANAL DE PRUEBA TEMPORAL — valida identificación completa de UNA canción, sin escribir nada todavía
+ipcMain.handle('test-identify', async (event, songId) => {
+  try {
+    const song = execToObjects('SELECT file_path FROM songs WHERE id = ?', [songId])[0];
+    if (!song) return { success: false, error: 'Canción no encontrada' };
+
+    console.log('🎧 Generando huella acústica...');
+    const fp = await getFingerprint(song.file_path);
+
+    console.log('🔍 Consultando AcoustID...');
+    const acoustidResult = await lookupAcoustID(fp.fingerprint, fp.durationSeconds);
+
+    if (!acoustidResult) {
+      console.log('⚠️ Sin coincidencias en AcoustID para esta pista.');
+      return { success: true, matched: false };
+    }
+
+    console.log(`✅ Coincidencia encontrada (score: ${acoustidResult.score}). Consultando MusicBrainz...`);
+    const metadata = await getRecordingMetadata(acoustidResult.recordingMbid);
+
+    console.log('🖼️ Buscando portada oficial...');
+    const coverUrl = await getCoverArtUrl(metadata.releaseMbid);
+
+    const finalResult = { ...metadata, coverUrl, matchScore: acoustidResult.score };
+    console.log('🎉 Resultado final:', finalResult);
+
+    return { success: true, matched: true, data: finalResult };
+  } catch (err) {
+    console.error('❌ Error durante identificación:', err.message);
+    return { success: false, error: err.message };
+  }
+});
+
+ipcMain.handle('start-autotag', async (event) => {
+  const incompleteSongs = execToObjects('SELECT id, file_path FROM songs WHERE is_incomplete = 1');
+
+  if (incompleteSongs.length === 0) {
+    return { success: true, processed: 0, identified: 0, skipped: 0, failed: 0, details: [] };
+  }
+
+  const songsForBatch = incompleteSongs.map(s => ({ id: s.id, filePath: s.file_path }));
+
+  const results = await runAutotagBatch(songsForBatch, (progress) => {
+    // Envía el progreso en vivo a la ventana de Angular
+    if (mainWindow) {
+      mainWindow.webContents.send('autotag-progress', progress);
+    }
+  });
+
+  // Marca como completas (is_incomplete = 0) las que sí se identificaron correctamente
+  const db = getDb();
+  const identifiedIds = results.details
+    .filter(d => d.status === 'identificada')
+    .map(d => d.id);
+
+  identifiedIds.forEach(id => {
+    db.prepare('UPDATE songs SET is_incomplete = 0 WHERE id = ?').run([id]);
+  });
+  saveDatabase();
+
+  return { success: true, ...results };
+});
+
+ipcMain.handle('scan-and-standardize', async (event, folderPath) => {
+  console.log(`🚀 Iniciando auditoría profunda en: ${folderPath}`);
+  wipeDatabase();
+  await scanDirectory(folderPath);
+  saveRootFolderPath(folderPath);
+
+  if (mainWindow) mainWindow.webContents.send('autotag-progress', { phase: 'scanning-done' });
+
+  const allSongs = execToObjects(`
+  SELECT s.id, s.file_path, s.title,
+         a.release_year as year,
+         a.title as album, art.name as artist, g.name as genre
+  FROM songs s
+  JOIN albums a ON s.album_id = a.id
+  JOIN artists art ON a.primary_artist_id = art.id
+  LEFT JOIN genres g ON s.genre_id = g.id
+`);
+
+  const candidates = allSongs;
+  let autotagResults = { processed: 0, identified: 0, skipped: 0, failed: 0, details: [] };
+
+  if (candidates.length > 0) {
+    const songsForBatch = candidates.map(s => ({
+      id: s.id, filePath: s.file_path, title: s.title, artist: s.artist, album: s.album, year: s.year, genre: s.genre
+    }));
+
+    autotagResults = await runAutotagBatch(songsForBatch, (progress) => {
+      if (mainWindow) mainWindow.webContents.send('autotag-progress', { phase: 'standardizing', ...progress });
+    });
+
+    // Reutilizamos tu propio motor de escaneo (ya probado) para releer los archivos
+    // físicamente corregidos y sincronizar SQLite. No reimplementamos esa lógica.
+    if (mainWindow) mainWindow.webContents.send('autotag-progress', { phase: 'syncing' });
+    await scanDirectory(folderPath);
+  }
+
+  if (mainWindow) mainWindow.webContents.send('autotag-progress', { phase: 'done' });
+
+  return { success: true, autotag: autotagResults };
 });
 
 app.whenReady().then(createWindow);
